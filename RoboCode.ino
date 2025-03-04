@@ -8,21 +8,27 @@ const char* ssid = "Redmi_Huxy";
 const char* password = "Wh1rlW1nd@03";
 AsyncWebServer server(80);
 
-#define R_MOTOR_PWM1 33 // Right foot pins
-#define R_MOTOR_PWM2 15
-#define L_MOTOR_PWM1 32 // Left foot pins
-#define L_MOTOR_PWM2 14
+#define R_MOTOR_PWM1 15 // Right foot pins
+#define R_MOTOR_PWM2 33
+#define L_MOTOR_PWM1 14 // Left foot pins
+#define L_MOTOR_PWM2 32
+
+#define WIFI_PIN 27
+#define SETTINGS_PIN 13
+#define BT_PIN 12
 
 HardwareSerial DFSerial(2);
 DFRobotDFPlayerMini myDFPlayer;
 
 ControllerPtr myControllers[BP32_MAX_GAMEPADS];
 
-uint8_t battery = 0;
+uint8_t battery = -1;
 bool BTConnection = false;
 String controllerModel = "Controller not connected";
 String macAddress = "Error...";
 bool DFConnection = false;
+bool inSettings = false;
+bool webControl = false;
 
 // Embedded HTML with CSS & JavaScript
 const char index_html[] PROGMEM = R"rawliteral(
@@ -146,10 +152,55 @@ const char index_html[] PROGMEM = R"rawliteral(
         }
         #sound button:hover { background-color: var(--hover-color); }
         #sound button:active { background-color: var(--active-color); }
-        #sound button:focus { background-color: var(--active-color); }
-        .folder { display: flex; gap: 2em; }
+        #changeSound { margin-top: 2em;}
+
+        .folders { display: flex; justify-content: center; gap: 3em; margin-top: 0em;}
+        .folder1, .folder2 { position: relative; cursor: pointer; width: 4em; height: 3.5em;}
+        .folds { display: none; position: absolute; width: 100%; left: 0; top: 0;}
+        .active { display: block; }
+
+        #fileContainer1 { display: none; align-items: center; justify-content: center; flex-direction: column; margin-bottom: 10em;}
+        #fileContainer2 { display: none; align-items: center; justify-content: center; flex-direction: column; margin-bottom: 10em;}
+        .activeFlex { display: flex !important;}
+        .files {
+            display: flex;
+            align-items: flex-end;
+            height: 10em;
+            width: 50%;
+            padding: 2em;
+            overflow-x: scroll; /* 'auto' instead of 'scroll' to hide scrollbar when not needed */
+            scrollbar-width: thin; /* Firefox */
+            scrollbar-color: var(--primary-color) transparent; /* Firefox */
+            z-index: 1;
+        }
+
+        /* For Webkit browsers (Chrome, Edge, Safari) */
+        .files::-webkit-scrollbar {
+            height: 6px; /* Thin scrollbar */
+        }
+
+        .files::-webkit-scrollbar-track {
+            background: red; /* Track background */
+        }
+
+        .files::-webkit-scrollbar-thumb {
+            background: var(--primary-color); /* Scrollbar color */
+            border-radius: 10px; /* Rounded corners */
+        }
+
+        .files::-webkit-scrollbar-thumb:hover {
+            background: var(--hover-color); /* Darker orange when hovered */
+        }
+        .file { display: flex; cursor: pointer;}
+        .fileName { transform: translate(-3em, -3.5em) rotate(-45deg); z-index: 2; text-wrap: nowrap; width: 2em;}
+        .circle { border-radius: 50%; border: 2px solid var(--primary-color); width: 3em; height: 3em;}
+        .circle:hover { background-color: var(--primary-color);} .circle:hover p { color: var(--secondary-color);}
     </style>
     <script>
+        var activeFolder = 0;
+        var currentSound = { folder: 1, file: 1, name: "Scream" }
+        let HeadLeftID, HeadRightID, UpID, DownID, LeftID, RightID;
+
         function updateBattery() {
             fetch('/battery')
                 .then(response => {
@@ -158,7 +209,9 @@ const char index_html[] PROGMEM = R"rawliteral(
                     }
                     return response.text();
                 })
-                .then(data => document.getElementById('battery').innerText = data + "%")
+                .then(data => {
+                    document.getElementById('battery').innerText = data;
+                })
                 .catch(error => {
                     console.error('Error fetching battery state:', error);
                     document.getElementById('battery').innerText = "Error...";
@@ -245,6 +298,74 @@ const char index_html[] PROGMEM = R"rawliteral(
                 });
         }
 
+        function onTurnHead(dir) {
+            fetch(`/turnHead?dir=${dir}`)
+                .then(response => response.text())
+                .then(data => {
+                    console.log('Arduino response:', data);  // Optional: Log the Arduino's response
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function offTurnHead() {
+            fetch(`/turnHead?dir=stop`)
+                .then(response => response.text())
+                .then(data => {
+                    console.log('Arduino response:', data);  // Optional: Log the Arduino's response
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function onMove(dir) {
+            
+            // Send the direction to the Arduino via a web request
+            fetch(`/move?dir=${dir}`)
+                .then(response => response.text())
+                .then(data => {
+                    console.log('Arduino response:', data);  // Optional: Log the Arduino's response
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function offMove() {
+            fetch(`/move?dir=stop`)
+                .then(response => response.text())
+                .then(data => {
+                    console.log('Arduino response:', data);  // Optional: Log the Arduino's response
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function onTurn(dir) {
+            fetch(`/turn?dir=${dir}`)
+                .then(response => response.text())
+                .then(data => {
+                    console.log('Arduino response:', data);  // Optional: Log the Arduino's response
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function offTurn() {
+            fetch(`/turn?dir=stop`)
+                .then(response => response.text())
+                .then(data => {
+                    console.log('Arduino response:', data);  // Optional: Log the Arduino's response
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
 
         function updateStatus() {
             checkBTConnection();
@@ -252,6 +373,46 @@ const char index_html[] PROGMEM = R"rawliteral(
             updateBattery();
             updateDFConnection();
             updateMac();
+        }
+
+        function changeFolder(folderNum) {
+            if (folderNum == 1) {
+                document.getElementById('fold1fill').classList.add("active");
+                document.getElementById('fold1').classList.remove("active");
+                document.getElementById('fold2fill').classList.remove("active");
+                document.getElementById('fold2').classList.add("active");
+                activeFolder = 1;
+                document.getElementById('fileContainer1').classList.add("activeFlex");
+                document.getElementById('fileContainer2').classList.remove("activeFlex");
+            } else if (folderNum == 2) {
+                document.getElementById('fold1fill').classList.remove("active");
+                document.getElementById('fold1').classList.add("active");
+                document.getElementById('fold2fill').classList.add("active");
+                document.getElementById('fold2').classList.remove("active");
+                activeFolder = 2;
+                document.getElementById('fileContainer1').classList.remove("activeFlex");
+                document.getElementById('fileContainer2').classList.add("activeFlex");
+            } else {
+                document.getElementById('fold1fill').classList.remove("active");
+                document.getElementById('fold1').classList.add("active");
+                document.getElementById('fold2fill').classList.remove("active");
+                document.getElementById('fold2').classList.add("active");
+                activeFolder = 0;
+                document.getElementById('fileContainer1').classList.remove("activeFlex");
+                document.getElementById('fileContainer2').classList.remove("activeFlex");
+            }
+        }
+
+        function changeSound({ folder, file, name }) {
+            currentSound = { folder: folder, file: file, name: name };
+            document.getElementById('currentSound').innerText = `/0${folder}/${file.toString().padStart(3, '0')}.mp3 - ${name}`;
+        }
+
+        function playSound() {
+            document.getElementById('playButton').innerText = "Playing...";
+            setTimeout(() => {
+                document.getElementById('playButton').innerText = "Play sound";
+            }, 2000); // 2000ms = 2 seconds
         }
 
         updateIP();
@@ -286,42 +447,227 @@ const char index_html[] PROGMEM = R"rawliteral(
                     <div>
                         <p>Head</p>
                         <div class="small-grid">
-                            <div class="grid-item gib"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="#2D2E32" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"><path d="m8 5l-5 5l5 5"/><path d="M3 10h8c5.523 0 10 4.477 10 10v1"/></g></svg></div>
-                            <div class="grid-item gib flip"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="#2D2E32" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"><path d="m8 5l-5 5l5 5"/><path d="M3 10h8c5.523 0 10 4.477 10 10v1"/></g></svg></div>
+                            <div onmousedown="onTurnHead('left')" onmouseup="offTurnHead()" class="grid-item gib"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="#2D2E32" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"><path d="m8 5l-5 5l5 5"/><path d="M3 10h8c5.523 0 10 4.477 10 10v1"/></g></svg></div>
+                            <div onmousedown="onTurnHead('right')" onmouseup="offTurnHead()" class="grid-item gib flip"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="#2D2E32" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"><path d="m8 5l-5 5l5 5"/><path d="M3 10h8c5.523 0 10 4.477 10 10v1"/></g></svg></div>
                         </div>
                     </div>
                     <div>
                         <p>Body</p>
                         <div class="grid-container">
                             <div class="grid-item"></div>
-                            <div class="grid-item gib"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#2D2E32" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 20V4m-7 7l7-7l7 7"/></svg></div>
+                            <div onmousedown="onMove('forward')" onmouseup="offMove()" class="grid-item gib"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#2D2E32" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 20V4m-7 7l7-7l7 7"/></svg></div>
                             <div class="grid-item"></div>
-                            <div class="grid-item gib"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#2D2E32" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="m11 5l-7 7l7 7m-7-7h16"/></svg></div>
-                            <div class="grid-item gib"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#2D2E32" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 20V4m-7 9l7 7l7-7"/></svg></div>
-                            <div class="grid-item gib"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#2D2E32" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 12h16m-7-7l7 7l-7 7"/></svg></div>
+                            <div onmousedown="onTurn('left')" onmouseup="offTurn()" class="grid-item gib"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#2D2E32" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="m11 5l-7 7l7 7m-7-7h16"/></svg></div>
+                            <div onmousedown="onMove('backward')" onmouseup="offMove()" class="grid-item gib"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#2D2E32" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 20V4m-7 9l7 7l7-7"/></svg></div>
+                            <div onmousedown="onTurn('right')" onmouseup="offTurn()" class="grid-item gib"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#2D2E32" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 12h16m-7-7l7 7l-7 7"/></svg></div>
                         </div>
                     </div>
                 </div>
 
                 <div id="sound">
-                    <p>Current sound:<br><strong>/01/001.mp3 - Scream</strong></p>
+                    <p>Current sound:<br><strong id="currentSound">/01/001.mp3 - Scream</strong></p>
 
                     <!-- & playing... -->
-                    <button>Play sound</button> 
-                    <button>Change sound</button>
+                    <button id="playButton" onclick="playSound()">Play sound</button>
                     <!-- & unmute -->
                     <button>Mute</button>
+                    <p id="changeSound">Change sound</p>
 
-                    <div class="folder">
-                        <img src="https://i.imgur.com/nspH2Hy.png" alt="Folder icon 1">
-                        <p>R2D2 sounds</p>
-                    </div>
-                    <div class="folder">
-                        <img src="https://i.imgur.com/xQulkar.png" alt="Folder icon 2">
-                        <p>Other sounds</p>
+                    <div class="folders">
+                        <div class="folder1" onclick="changeFolder(1)">
+                            <svg class="folds active" id="fold1" width="50" height="52" viewBox="0 0 50 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.125 16.25C3.125 12.7497 3.125 10.9995 3.80621 9.66256C4.40542 8.48655 5.36155 7.53042 6.53756 6.93121C7.87451 6.25 9.62467 6.25 13.125 6.25H16.3367C18.4937 6.25 19.5722 6.25 20.5326 6.56946C21.3823 6.85206 22.1612 7.31391 22.8168 7.92375C23.558 8.61312 24.0754 9.55938 25.1104 11.4519L26.3672 13.75H36.875C40.3753 13.75 42.1255 13.75 43.4624 14.4312C44.6385 15.0304 45.5946 15.9865 46.1938 17.1626C46.875 18.4995 46.875 20.2497 46.875 23.75V33.75C46.875 37.2503 46.875 39.0005 46.1938 40.3374C45.5946 41.5135 44.6385 42.4696 43.4624 43.0688C42.1255 43.75 40.3753 43.75 36.875 43.75H13.125C9.62467 43.75 7.87451 43.75 6.53756 43.0688C5.36155 42.4696 4.40542 41.5135 3.80621 40.3374C3.125 39.0005 3.125 37.2503 3.125 33.75V16.25Z" stroke="#EB9032" stroke-width="2"/><path d="M20.7166 22.008L24.8686 19.68H27.2686V36H24.4366V22.848L21.9886 24.192L20.7166 22.008Z" fill="#EB9032"/></svg>
+                            <svg class="folds" id="fold1fill" width="50" height="52" viewBox="0 0 50 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.125 16.25C3.125 12.7497 3.125 10.9995 3.80621 9.66256C4.40542 8.48655 5.36155 7.53042 6.53756 6.93121C7.87451 6.25 9.62467 6.25 13.125 6.25H16.3367C18.4937 6.25 19.5722 6.25 20.5326 6.56946C21.3823 6.85206 22.1612 7.31391 22.8168 7.92375C23.558 8.61312 24.0754 9.55938 25.1104 11.4519L26.3672 13.75H36.875C40.3753 13.75 42.1255 13.75 43.4624 14.4312C44.6385 15.0304 45.5946 15.9865 46.1938 17.1626C46.875 18.4995 46.875 20.2497 46.875 23.75V33.75C46.875 37.2503 46.875 39.0005 46.1938 40.3374C45.5946 41.5135 44.6385 42.4696 43.4624 43.0688C42.1255 43.75 40.3753 43.75 36.875 43.75H13.125C9.62467 43.75 7.87451 43.75 6.53756 43.0688C5.36155 42.4696 4.40542 41.5135 3.80621 40.3374C3.125 39.0005 3.125 37.2503 3.125 33.75V16.25Z" fill="#EB9032" stroke="#EB9032" stroke-width="2"/><path d="M20.7166 22.008L24.8686 19.68H27.2686V36H24.4366V22.848L21.9886 24.192L20.7166 22.008Z" fill="#2D2E32"/></svg>
+                        </div>
+                        <div class="folder2" onclick="changeFolder(2)">
+                            <svg class="folds active" id="fold2" width="50" height="52" viewBox="0 0 50 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.125 16.25C3.125 12.7497 3.125 10.9995 3.80621 9.66256C4.40542 8.48655 5.36155 7.53042 6.53756 6.93121C7.87451 6.25 9.62467 6.25 13.125 6.25H16.3367C18.4937 6.25 19.5722 6.25 20.5326 6.56946C21.3823 6.85206 22.1612 7.31391 22.8168 7.92375C23.558 8.61312 24.0754 9.55938 25.1104 11.4519L26.3672 13.75H36.875C40.3753 13.75 42.1255 13.75 43.4624 14.4312C44.6385 15.0304 45.5946 15.9865 46.1938 17.1626C46.875 18.4995 46.875 20.2497 46.875 23.75V33.75C46.875 37.2503 46.875 39.0005 46.1938 40.3374C45.5946 41.5135 44.6385 42.4696 43.4624 43.0688C42.1255 43.75 40.3753 43.75 36.875 43.75H13.125C9.62467 43.75 7.87451 43.75 6.53756 43.0688C5.36155 42.4696 4.40542 41.5135 3.80621 40.3374C3.125 39.0005 3.125 37.2503 3.125 33.75V16.25Z" stroke="#EB9032" stroke-width="2"/><path d="M29.7894 36H19.9014V33.72C19.9014 32.568 20.0534 31.608 20.3574 30.84C20.6614 30.056 21.0694 29.416 21.5814 28.92C22.0934 28.408 22.6534 28 23.2614 27.696L24.8934 26.88C25.5174 26.56 26.0214 26.224 26.4054 25.872C26.8054 25.504 27.0054 25.032 27.0054 24.456V24.024C27.0054 23.432 26.7974 22.968 26.3814 22.632C25.9814 22.28 25.3334 22.104 24.4374 22.104C23.8934 22.104 23.3414 22.184 22.7814 22.344C22.2374 22.504 21.5734 22.728 20.7894 23.016L19.9014 20.544C20.7974 20.144 21.6134 19.864 22.3494 19.704C23.1014 19.528 23.8294 19.44 24.5334 19.44C25.8294 19.44 26.8614 19.648 27.6294 20.064C28.4134 20.48 28.9734 21.04 29.3094 21.744C29.6614 22.432 29.8374 23.192 29.8374 24.024V24.456C29.8374 25.32 29.6614 26.056 29.3094 26.664C28.9734 27.272 28.5254 27.784 27.9654 28.2C27.4054 28.616 26.7974 28.984 26.1414 29.304L24.5094 30.12C23.9174 30.408 23.4774 30.808 23.1894 31.32C22.9174 31.832 22.7654 32.488 22.7334 33.288H29.7894V36Z" fill="#EB9032"/></svg>
+                            <svg class="folds" id="fold2fill" width="50" height="52" viewBox="0 0 50 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.125 16.25C3.125 12.7497 3.125 10.9995 3.80621 9.66256C4.40542 8.48655 5.36155 7.53042 6.53756 6.93121C7.87451 6.25 9.62467 6.25 13.125 6.25H16.3367C18.4937 6.25 19.5722 6.25 20.5326 6.56946C21.3823 6.85206 22.1612 7.31391 22.8168 7.92375C23.558 8.61312 24.0754 9.55938 25.1104 11.4519L26.3672 13.75H36.875C40.3753 13.75 42.1255 13.75 43.4624 14.4312C44.6385 15.0304 45.5946 15.9865 46.1938 17.1626C46.875 18.4995 46.875 20.2497 46.875 23.75V33.75C46.875 37.2503 46.875 39.0005 46.1938 40.3374C45.5946 41.5135 44.6385 42.4696 43.4624 43.0688C42.1255 43.75 40.3753 43.75 36.875 43.75H13.125C9.62467 43.75 7.87451 43.75 6.53756 43.0688C5.36155 42.4696 4.40542 41.5135 3.80621 40.3374C3.125 39.0005 3.125 37.2503 3.125 33.75V16.25Z" fill="#EB9032" stroke="#EB9032" stroke-width="2"/><path d="M29.7894 36H19.9014V33.72C19.9014 32.568 20.0534 31.608 20.3574 30.84C20.6614 30.056 21.0694 29.416 21.5814 28.92C22.0934 28.408 22.6534 28 23.2614 27.696L24.8934 26.88C25.5174 26.56 26.0214 26.224 26.4054 25.872C26.8054 25.504 27.0054 25.032 27.0054 24.456V24.024C27.0054 23.432 26.7974 22.968 26.3814 22.632C25.9814 22.28 25.3334 22.104 24.4374 22.104C23.8934 22.104 23.3414 22.184 22.7814 22.344C22.2374 22.504 21.5734 22.728 20.7894 23.016L19.9014 20.544C20.7974 20.144 21.6134 19.864 22.3494 19.704C23.1014 19.528 23.8294 19.44 24.5334 19.44C25.8294 19.44 26.8614 19.648 27.6294 20.064C28.4134 20.48 28.9734 21.04 29.3094 21.744C29.6614 22.432 29.8374 23.192 29.8374 24.024V24.456C29.8374 25.32 29.6614 26.056 29.3094 26.664C28.9734 27.272 28.5254 27.784 27.9654 28.2C27.4054 28.616 26.7974 28.984 26.1414 29.304L24.5094 30.12C23.9174 30.408 23.4774 30.808 23.1894 31.32C22.9174 31.832 22.7654 32.488 22.7334 33.288H29.7894V36Z" fill="#2D2E32"/></svg>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
+        <div id="fileContainer1">           
+            <div class="files">
+                <div class="file" onclick="changeSound({ folder: 1, file: 2, name: 'Scream' })">
+                    <div class="circle">
+                        <p>001</p>
+                    </div>
+                    <p class="fileName">Scream</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 1, file: 2, name: 'Ack 1' })">
+                    <div class="circle">
+                        <p>002</p>
+                    </div>
+                    <p class="fileName">Ack 1</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 1, file: 3, name: 'Ack 2' })">
+                    <div class="circle">
+                        <p>003</p>
+                    </div>
+                    <p class="fileName">Ack 2</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 1, file: 4, name: 'Chat' })">
+                    <div class="circle">
+                        <p>004</p>
+                    </div>
+                    <p class="fileName">Chat</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 1, file: 5, name: 'Excited 1' })">
+                    <div class="circle">
+                        <p>005</p>
+                    </div>
+                    <p class="fileName">Excited 1</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 1, file: 6, name: 'Excited 2' })">
+                    <div class="circle">
+                        <p>006</p>
+                    </div>
+                    <p class="fileName">Excited 2</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 1, file: 7, name: 'Shout' })">
+                    <div class="circle">
+                        <p>007</p>
+                    </div>
+                    <p class="fileName">Shout</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 1, file: 8, name: 'Worried' })">
+                    <div class="circle">
+                        <p>008</p>
+                    </div>
+                    <p class="fileName">Worried</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 1, file: 9, name: 'Crazy' })">
+                    <div class="circle">
+                        <p>009</p>
+                    </div>
+                    <p class="fileName">Crazy</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 1, file: 20, name: 'Random Noise' })">
+                    <div class="circle">
+                        <p>020</p>
+                    </div>
+                    <p class="fileName">Random Noise</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 1, file: 21, name: 'Random Noise' })">
+                    <div class="circle">
+                        <p>021</p>
+                    </div>
+                    <p class="fileName">Random Noise</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 1, file: 22, name: 'Random Noise' })">
+                    <div class="circle">
+                        <p>022</p>
+                    </div>
+                    <p class="fileName">Random Noise</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 1, file: 23, name: 'Random Noise' })">
+                    <div class="circle">
+                        <p>023</p>
+                    </div>
+                    <p class="fileName">Random Noise</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 1, file: 24, name: 'Random Noise' })">
+                    <div class="circle">
+                        <p>024</p>
+                    </div>
+                    <p class="fileName">Random Noise</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 1, file: 25, name: 'Random Noise' })">
+                    <div class="circle">
+                        <p>025</p>
+                    </div>
+                    <p class="fileName">Random Noise</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 1, file: 26, name: 'Random Noise' })">
+                    <div class="circle">
+                        <p>026</p>
+                    </div>
+                    <p class="fileName">Random Noise</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 1, file: 27, name: 'Random Noise' })">
+                    <div class="circle">
+                        <p>027</p>
+                    </div>
+                    <p class="fileName">Random Noise</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 1, file: 28, name: 'Random Noise' })">
+                    <div class="circle">
+                        <p>028</p>
+                    </div>
+                    <p class="fileName">Random Noise</p>
+                </div>                
+            </div>
+        </div>
+
+        <div id="fileContainer2">           
+            <div class="files">
+                <div class="file" onclick="changeSound({ folder: 2, file: 1, name: 'Jazz' })">
+                    <div class="circle">
+                        <p>001</p>
+                    </div>
+                    <p class="fileName">Jazz</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 2, file: 2, name: 'Switch Off' })">
+                    <div class="circle">
+                        <p>002</p>
+                    </div>
+                    <p class="fileName">Switch Off</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 2, file: 3, name: 'All Systems' })">
+                    <div class="circle">
+                        <p>003</p>
+                    </div>
+                    <p class="fileName">All Systems</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 2, file: 4, name: 'Nani' })">
+                    <div class="circle">
+                        <p>004</p>
+                    </div>
+                    <p class="fileName">Nani</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 2, file: 5, name: 'Senpai' })">
+                    <div class="circle">
+                        <p>005</p>
+                    </div>
+                    <p class="fileName">Senpai</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 2, file: 6, name: 'Fool' })">
+                    <div class="circle">
+                        <p>006</p>
+                    </div>
+                    <p class="fileName">Fool</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 2, file: 7, name: 'Destroy' })">
+                    <div class="circle">
+                        <p>007</p>
+                    </div>
+                    <p class="fileName">Destroy</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 2, file: 8, name: 'Be back' })">
+                    <div class="circle">
+                        <p>008</p>
+                    </div>
+                    <p class="fileName">Be back</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 2, file: 9, name: 'Drug Dealer' })">
+                    <div class="circle">
+                        <p>009</p>
+                    </div>
+                    <p class="fileName">Drug Dealer</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 2, file: 10, name: 'Impostor' })">
+                    <div class="circle">
+                        <p>010</p>
+                    </div>
+                    <p class="fileName">Impostor</p>
+                </div>
+                <div class="file" onclick="changeSound({ folder: 2, file: 11, name: 'FU' })">
+                    <div class="circle">
+                        <p>011</p>
+                    </div>
+                    <p class="fileName">FU</p>
+                </div>
             </div>
         </div>
     </div>
@@ -349,6 +695,7 @@ void onConnectedController(ControllerPtr ctl) {
     battery = ctl->battery() / 2.55;
     controllerModel = ctl->getModelName();
     BTConnection = true;
+    digitalWrite(BT_PIN, HIGH);
     if (!foundEmptySlot) {
         Serial.println("CALLBACK: Controller connected, but could not found empty slot");
     }
@@ -366,6 +713,9 @@ void onDisconnectedController(ControllerPtr ctl) {
         }
     }
 
+
+    BTConnection = false;
+    digitalWrite(BT_PIN, LOW);
     if (!foundController) {
         Serial.println("CALLBACK: Controller disconnected, but not found in myControllers");
     }
@@ -416,16 +766,35 @@ void processGamepad(ControllerPtr ctl) {
         colorIdx++;
     }
 
+    if (ctl->miscSelect()) {
+      Serial.println("Clicked Settings!");
+      Serial.printf("Before Toggle: inSettings = %d\n", inSettings);
+
+      if (inSettings) {
+          digitalWrite(SETTINGS_PIN, LOW);
+          inSettings = false;
+      } else {
+          digitalWrite(SETTINGS_PIN, HIGH);
+          inSettings = true;
+      }
+
+      Serial.printf("After Toggle: inSettings = %d\n", inSettings);
+    }
+
+
     if (ctl->r1()) {
       Serial.println("Turning right");
+      webControl = false;
     }
 
     if (ctl->l1()) {
       Serial.println("Turning left");
+      webControl = false;
     }
 
     if (ctl->r2()) {  // Move Forward
         int speedFwd = map(ctl->throttle(), 0, 1023, 140, 255);
+        webControl = false;
         Serial.printf("Moving forward: Speed %d\n", speedFwd);
         ledcWrite(0, speedFwd);  // Forward motion
         ledcWrite(1, 0);
@@ -433,12 +802,13 @@ void processGamepad(ControllerPtr ctl) {
         ledcWrite(3, 0);
     } else if (ctl->l2()) {  // Move Backward
         int speedBwd = map(ctl->brake(), 0, 1023, 140, 255);
+        webControl = false;
         Serial.printf("Moving backward: Speed %d\n", speedBwd);
         ledcWrite(0, 0);
         ledcWrite(1, speedBwd);  // Reverse motion
         ledcWrite(2, 0);
         ledcWrite(3, speedBwd);  // Reverse motion
-    } else {  // Stop Motor
+    } else if (ctl->throttle() == 0 && !webControl) {  // Stop Motor
         ledcWrite(0, 0);
         ledcWrite(1, 0);
         ledcWrite(2, 0);
@@ -546,7 +916,14 @@ void printDetail(uint8_t type, int value){
 void setup() {
     Serial.begin(115200);
 
-    // Get and check Bluetooth address
+    // Init LEDS
+    pinMode(WIFI_PIN, OUTPUT);
+    digitalWrite(WIFI_PIN, LOW);
+    pinMode(BT_PIN, OUTPUT);
+    digitalWrite(BT_PIN, LOW);
+    pinMode(SETTINGS_PIN, OUTPUT);
+    digitalWrite(SETTINGS_PIN, LOW);
+
     Serial.printf("Firmware: %s\n", BP32.firmwareVersion());
 
     const uint8_t* addr = BP32.localBdAddress();
@@ -555,7 +932,7 @@ void setup() {
         sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", 
                 addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
 
-        macAddress = String(macStr); // Convert char array to String
+        macAddress = String(macStr);
         Serial.println("BD Addr: " + macAddress);
     } else {
         Serial.println("Error: Failed to get Bluetooth address.");
@@ -565,7 +942,10 @@ void setup() {
     WiFi.begin(ssid, password);
     unsigned long wifiStart = millis();
     while (WiFi.status() != WL_CONNECTED && (millis() - wifiStart) < 15000) {
-        delay(1000);
+        digitalWrite(WIFI_PIN, HIGH);
+        delay(500);
+        digitalWrite(WIFI_PIN, LOW);
+        delay(500);
         Serial.println("Connecting to WiFi...");
     }
 
@@ -574,9 +954,10 @@ void setup() {
         Serial.println("Connected to WiFi!");
         Serial.print("IP Address: ");
         Serial.println(WiFi.localIP());
-
+        digitalWrite(WIFI_PIN, HIGH);
     } else {
         Serial.println("WiFi connection failed. Continuing without WiFi...");
+        digitalWrite(WIFI_PIN, LOW);
     }
 
     // DFPlayer Mini initialization
@@ -603,7 +984,16 @@ void setup() {
     });
 
     server.on("/battery", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(200, "text/plain", String(battery).c_str());
+        String batteryPercentage;
+
+        // Check if the battery value is valid (>= 0)
+        if (battery >= 0) {
+            batteryPercentage = String(battery) + "%";  // Append % to battery value
+        } else {
+            batteryPercentage = "Invalid battery value";  // Or set to a default value or error message
+        }
+
+        request->send(200, "text/plain", batteryPercentage.c_str());
     });
 
     server.on("/mac", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -630,6 +1020,63 @@ void setup() {
         } else {
             request->send(400, "text/plain", "Invalid request");
         }
+    });
+
+    server.on("/turnHead", HTTP_GET, [](AsyncWebServerRequest *request) {
+        String dir = request->getParam("dir")->value();  // Get direction from query parameter
+        Serial.println("Turning head on direction: " + dir);
+        request->send(200, "text/plain", "Head turned to " + dir);  // Response to the client
+    });
+
+    server.on("/move", HTTP_GET, [](AsyncWebServerRequest *request) {
+        String dir = request->getParam("dir")->value();  // Get direction from query parameter
+        
+        if (dir == "forward") {
+          webControl = true;
+            int speedFwd = 254; // Adjust speed as needed (can also be dynamic like the gamepad version)
+            Serial.printf("Moving forward: Speed %d\n", speedFwd);
+
+            // Set motor speeds for forward movement
+            ledcWrite(0, speedFwd);  // Forward motion
+            ledcWrite(1, 0);
+            ledcWrite(2, speedFwd);  // Forward motion
+            ledcWrite(3, 0);
+
+            request->send(200, "text/plain", "Moving forward");
+        } else if (dir == "backward") {
+            webControl = true;
+            int speedBwd = 254; // Adjust speed as needed
+            Serial.printf("Moving backward: Speed %d\n", speedBwd);
+
+            // Set motor speeds for backward movement
+            ledcWrite(0, 0);
+            ledcWrite(1, speedBwd);  // Reverse motion
+            ledcWrite(2, 0);
+            ledcWrite(3, speedBwd);  // Reverse motion
+
+            request->send(200, "text/plain", "Moving backward");
+
+        } else if (dir == "stop") {
+            webControl = true;
+            int speedBwd = 0; // Adjust speed as needed
+            Serial.printf("Stopped moving\n");
+
+            // Set motor speeds for backward movement
+            ledcWrite(0, 0);
+            ledcWrite(1, speedBwd);  // Reverse motion
+            ledcWrite(2, 0);
+            ledcWrite(3, speedBwd);  // Reverse motion
+
+            request->send(200, "text/plain", "Stopped moving");
+        } else {
+            request->send(400, "text/plain", "Invalid direction");
+        }
+    });
+
+    server.on("/turn", HTTP_GET, [](AsyncWebServerRequest *request) {
+        String dir = request->getParam("dir")->value();  // Get direction from query parameter
+        Serial.println("Turning in direction: " + dir);
+        request->send(200, "text/plain", "Turning in direction " + dir);  // Response to the client
     });
 
     server.begin();

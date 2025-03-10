@@ -4,8 +4,8 @@
 #include "Arduino.h"
 #include "DFRobotDFPlayerMini.h"
 
-const char* ssid = "Redmi_Huxy";
-const char* password = "Wh1rlW1nd@03";
+const char* ssid = "WIFI_NAME";
+const char* password = "WIFI_PASSWORD";
 AsyncWebServer server(80);
 
 #define R_MOTOR_PWM1 15 // Right foot pins

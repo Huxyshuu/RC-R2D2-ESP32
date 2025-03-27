@@ -5,44 +5,55 @@
 #include "DFRobotDFPlayerMini.h"
 #include <HTTPClient.h>
 
-const char* botToken = "xxx";  // Replace with your bot token
-const char* chatID = "xxx";  // Replace with your Telegram chat ID
+// Telegram Bot Credentials
+const char *botToken = "xxx";                                         // Replace with your bot token 
+                                                                      // ( should look something like bot1111111111:AAAAA_-AAAAaAAaaAaAAaaaAAAAAAAAAAA ) 
+const char *chatID = "xxx";                                           // Replace with your Telegram chat ID
 
-const char* ssid = "xxx"; // Replace with your Wifi Name
-const char* password = "xxx"; // Replace with your Wifi Password
+// WiFi Credentials
+const char *ssid = "xxx";                                             // Replace with your Wifi name
+const char *password = "xxx";                                         // Replace with your Wifi password
 AsyncWebServer server(80);
 
-#define R_MOTOR_PWM1 15 // Right foot pins
+// Motor Control Pins
+#define R_MOTOR_PWM1 15  
 #define R_MOTOR_PWM2 33
-#define L_MOTOR_PWM1 32 // Left foot pins
+#define L_MOTOR_PWM1 32  
 #define L_MOTOR_PWM2 14
-#define HEAD_MOTOR_PWM1 26 // Head pins
+#define HEAD_MOTOR_PWM1 26  
 #define HEAD_MOTOR_PWM2 25
 
+// Status Indicator Pins
 #define WIFI_PIN 27
 #define SETTINGS_PIN 13
 #define BT_PIN 12
 
+// DFPlayer Serial Connection
 HardwareSerial DFSerial(2);
 DFRobotDFPlayerMini myDFPlayer;
 
+// Controller Setup
 ControllerPtr myControllers[BP32_MAX_GAMEPADS];
 
+// System Variables
 uint8_t battery = 0;
 uint8_t volume = 25;
 bool BTConnection = false;
-String controllerModel = "Controller not connected";
-String macAddress = "Error...";
 bool DFConnection = false;
 bool inSettings = false;
 bool webControl = false;
+bool muted = false;
+
+String controllerModel = "Controller not connected";
+String macAddress = "Error...";
+
 uint8_t folderNum = 1;
 uint8_t fileNum = 1;
 int legSpeed = 0;
 int headSpeed = 0;
+
 unsigned long lastPlayTime = 0;
 unsigned long playInterval = 0;
-bool muted = false;
 
 // Embedded HTML with CSS & JavaScript
 const char index_html[] PROGMEM = R"rawliteral(
@@ -857,255 +868,246 @@ const char index_html[] PROGMEM = R"rawliteral(
 )rawliteral";
 
 void sendTelegramMessage(String message) {
-    HTTPClient http;
+  HTTPClient http;
 
-    String encodedMessage = message;
-    encodedMessage.replace(" ", "%20");
-    encodedMessage.replace("\n", "%0A");
+  String encodedMessage = message;
+  encodedMessage.replace(" ", "%20");
+  encodedMessage.replace("\n", "%0A");
 
-    String url = "https://api.telegram.org/" + String(botToken) + "/sendMessage?chat_id=" + String(chatID) + "&text=" + encodedMessage;
-    
-    Serial.println("Sending Telegram message...");
-    http.begin(url);
-    int httpResponseCode = http.GET();
-    if (httpResponseCode > 0) {
-        Serial.println("Message sent successfully!");
-    } else {
-        Serial.print("Error sending message: ");
-        Serial.println(httpResponseCode);
-    }
-    http.end();
+  String url = "https://api.telegram.org/" + String(botToken) + "/sendMessage?chat_id=" + String(chatID) + "&text=" + encodedMessage;
+
+  Serial.println("Sending Telegram message...");
+
+  http.begin(url);
+  http.setTimeout(5000);    // Set 5s timeout
+
+  int httpResponseCode = http.GET();
+  if (httpResponseCode > 0) {
+    Serial.println("Message sent successfully!");
+  } else {
+    Serial.printf("Error sending message: %d\n", httpResponseCode);
+  }
+
+  http.end();
 }
 
 // This callback gets called any time a new gamepad is connected.
 // Up to 4 gamepads can be connected at the same time.
 void onConnectedController(ControllerPtr ctl) {
-    bool foundEmptySlot = false;
-    for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
-        if (myControllers[i] == nullptr) {
-            Serial.printf("CALLBACK: Controller is connected, index=%d\n", i);
-            // Additionally, you can get certain gamepad properties like:
-            // Model, VID, PID, BTAddr, flags, etc.
-            ControllerProperties properties = ctl->getProperties();
-            Serial.printf("Controller model: %s, VID=0x%04x, PID=0x%04x\n", ctl->getModelName().c_str(), properties.vendor_id,
-                           properties.product_id);
-            myControllers[i] = ctl;
-            foundEmptySlot = true;
-            break;
-        }
+  bool foundEmptySlot = false;
+  for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
+    if (myControllers[i] == nullptr) {
+      Serial.printf("CALLBACK: Controller is connected, index=%d\n", i);
+      // Additionally, you can get certain gamepad properties like:
+      // Model, VID, PID, BTAddr, flags, etc.
+      ControllerProperties properties = ctl->getProperties();
+      Serial.printf("Controller model: %s, VID=0x%04x, PID=0x%04x\n", ctl->getModelName().c_str(), properties.vendor_id,
+                    properties.product_id);
+      myControllers[i] = ctl;
+      foundEmptySlot = true;
+      break;
     }
-    battery = ctl->battery() / 2.55;
-    Serial.println(battery);
-    controllerModel = ctl->getModelName();
-    BTConnection = true;
-    digitalWrite(BT_PIN, HIGH);
-    if (!foundEmptySlot) {
-        Serial.println("CALLBACK: Controller connected, but could not found empty slot");
-    }
+  }
+  battery = ctl->battery() / 2.55;
+  Serial.println(battery);
+  controllerModel = ctl->getModelName();
+  BTConnection = true;
+  digitalWrite(BT_PIN, HIGH);
+  if (!foundEmptySlot) {
+    Serial.println("CALLBACK: Controller connected, but could not found empty slot");
+  }
 }
 
 void onDisconnectedController(ControllerPtr ctl) {
-    bool foundController = false;
+  bool foundController = false;
 
-    for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
-        if (myControllers[i] == ctl) {
-            Serial.printf("CALLBACK: Controller disconnected from index=%d\n", i);
-            myControllers[i] = nullptr;
-            foundController = true;
-            break;
-        }
+  for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
+    if (myControllers[i] == ctl) {
+      Serial.printf("CALLBACK: Controller disconnected from index=%d\n", i);
+      myControllers[i] = nullptr;
+      foundController = true;
+      break;
     }
+  }
 
-
-    BTConnection = false;
-    digitalWrite(BT_PIN, LOW);
-    if (!foundController) {
-        Serial.println("CALLBACK: Controller disconnected, but not found in myControllers");
-    }
+  BTConnection = false;
+  digitalWrite(BT_PIN, LOW);
+  if (!foundController) {
+    Serial.println("CALLBACK: Controller disconnected, but not found in myControllers");
+  }
 }
 
 void dumpGamepad(ControllerPtr ctl) {
-    Serial.printf(
-        "idx=%d, dpad: 0x%02x, buttons: 0x%04x, axis L: %4d, %4d, axis R: %4d, %4d, brake: %4d, throttle: %4d, "
-        "misc: 0x%02x, gyro x:%6d y:%6d z:%6d, accel x:%6d y:%6d z:%6d\n",
-        ctl->index(),        // Controller Index
-        ctl->dpad(),         // D-pad
-        ctl->buttons(),      // bitmask of pressed buttons
-        ctl->axisX(),        // (-511 - 512) left X Axis
-        ctl->axisY(),        // (-511 - 512) left Y axis
-        ctl->axisRX(),       // (-511 - 512) right X axis
-        ctl->axisRY(),       // (-511 - 512) right Y axis
-        ctl->brake(),        // (0 - 1023): brake button
-        ctl->throttle(),     // (0 - 1023): throttle (AKA gas) button
-        ctl->miscButtons(),  // bitmask of pressed "misc" buttons
-        ctl->gyroX(),        // Gyro X
-        ctl->gyroY(),        // Gyro Y
-        ctl->gyroZ(),        // Gyro Z
-        ctl->accelX(),       // Accelerometer X
-        ctl->accelY(),       // Accelerometer Y
-        ctl->accelZ()        // Accelerometer Z
-    );
+  Serial.printf(
+    "idx=%d, dpad: 0x%02x, buttons: 0x%04x, axis L: %4d, %4d, axis R: %4d, %4d, brake: %4d, throttle: %4d, "
+    "misc: 0x%02x, gyro x:%6d y:%6d z:%6d, accel x:%6d y:%6d z:%6d\n",
+    ctl->index(),        // Controller Index
+    ctl->dpad(),         // D-pad
+    ctl->buttons(),      // bitmask of pressed buttons
+    ctl->axisX(),        // (-511 - 512) left X Axis
+    ctl->axisY(),        // (-511 - 512) left Y axis
+    ctl->axisRX(),       // (-511 - 512) right X axis
+    ctl->axisRY(),       // (-511 - 512) right Y axis
+    ctl->brake(),        // (0 - 1023): brake button
+    ctl->throttle(),     // (0 - 1023): throttle (AKA gas) button
+    ctl->miscButtons(),  // bitmask of pressed "misc" buttons
+    ctl->gyroX(),        // Gyro X
+    ctl->gyroY(),        // Gyro Y
+    ctl->gyroZ(),        // Gyro Z
+    ctl->accelX(),       // Accelerometer X
+    ctl->accelY(),       // Accelerometer Y
+    ctl->accelZ()        // Accelerometer Z
+  );
 }
 
 void processGamepad(ControllerPtr ctl) {
-    if (ctl->a()) {
-        static int colorIdx = 0;
-        // Some gamepads like DS4 and DualSense support changing the color LED.
-        // It is possible to change it by calling:
-        switch (colorIdx % 3) {
-            case 0:
-                // Red
-                ctl->setColorLED(255, 0, 0);
-                break;
-            case 1:
-                // Green
-                ctl->setColorLED(0, 255, 0);
-                break;
-            case 2:
-                // Blue
-                ctl->setColorLED(0, 0, 255);
-                break;
-        }
-        colorIdx++;
+  if (ctl->a()) {
+    static int colorIdx = 0;
+    switch (colorIdx % 3) {
+      case 0:
+        // Red
+        ctl->setColorLED(255, 0, 0);
+        break;
+      case 1:
+        // Green
+        ctl->setColorLED(112, 243, 254);
+        break;
+      case 2:
+        // Blue
+        ctl->setColorLED(0, 0, 255);
+        break;
+    }
+    colorIdx++;
+  }
+
+  if (ctl->miscSelect()) {
+    Serial.println("Clicked Settings!");
+    Serial.printf("Before Toggle: inSettings = %d\n", inSettings);
+
+    if (inSettings) {
+      digitalWrite(SETTINGS_PIN, LOW);
+      inSettings = false;
+    } else {
+      digitalWrite(SETTINGS_PIN, HIGH);
+      inSettings = true;
     }
 
-    if (ctl->miscSelect()) {
-      Serial.println("Clicked Settings!");
-      Serial.printf("Before Toggle: inSettings = %d\n", inSettings);
+    Serial.printf("After Toggle: inSettings = %d\n", inSettings);
+  }
 
-      if (inSettings) {
-          digitalWrite(SETTINGS_PIN, LOW);
-          inSettings = false;
-      } else {
-          digitalWrite(SETTINGS_PIN, HIGH);
-          inSettings = true;
-      }
+  int speedFwd = map(ctl->throttle(), 0, 1023, 120, 255);
+  int speedBwd = map(ctl->brake(), 0, 1023, 120, 255);
 
-      Serial.printf("After Toggle: inSettings = %d\n", inSettings);
+  if (ctl->r1()) {  // Rotate right
+    webControl = false;
+    if (speedFwd > 120) {
+      ledcWrite(0, 255);                            // LEFT FWD
+      ledcWrite(1, 0);                              // LEFT BWD
+      ledcWrite(2, constrain(speedFwd, 120, 180));  // RIGHT FWD
+      ledcWrite(3, 0);                              // RIGHT BWD
+      legSpeed = speedFwd;
+    } else if (speedBwd > 120) {
+      ledcWrite(0, 0);
+      ledcWrite(1, constrain(speedBwd, 120, 180));
+      ledcWrite(2, 0);
+      ledcWrite(3, 255);
+      legSpeed = speedBwd;
+    } else {
+      ledcWrite(0, 255);
+      ledcWrite(1, 0);
+      ledcWrite(2, 0);
+      ledcWrite(3, 255);
+      legSpeed = 255;
     }
 
-    int speedFwd = map(ctl->throttle(), 0, 1023, 120, 255);
-    int speedBwd = map(ctl->brake(), 0, 1023, 120, 255);
-
-    if (ctl->r1()) {
-      webControl = false;
-      if (speedFwd > 120) {
-        ledcWrite(0, 255); // LEFT FWD
-        ledcWrite(1, 0); // LEFT BWD
-        ledcWrite(2, constrain(speedFwd, 120, 180)); // RIGHT FWD
-        ledcWrite(3, 0); // RIGHT BWD
-        legSpeed = speedFwd;
-      } else if (speedBwd > 120) {
-        ledcWrite(0, 0);
-        ledcWrite(1, constrain(speedBwd, 120, 180));
-        ledcWrite(2, 0);
-        ledcWrite(3, 255);
-        legSpeed = speedBwd;
-      } else {
-        ledcWrite(0, 255);
-        ledcWrite(1, 0);
-        ledcWrite(2, 0);
-        ledcWrite(3, 255);
-        legSpeed = 255;
-      }
-
-    } else if (ctl->l1()) {
-        webControl = false;
-        if (speedFwd > 120) {
-        ledcWrite(0, constrain(speedFwd, 120, 180));
-        ledcWrite(1, 0);
-        ledcWrite(2, 255);
-        ledcWrite(3, 0);
-        legSpeed = speedFwd;
-      } else if (speedBwd > 120) {
-        ledcWrite(0, 0);
-        ledcWrite(1, 255);
-        ledcWrite(2, 0);
-        ledcWrite(3, constrain(speedBwd, 120, 180));
-        legSpeed = speedBwd;
-      } else {
-        ledcWrite(0, 0);
-        ledcWrite(1, 255);
-        ledcWrite(2, 255);
-        ledcWrite(3, 0);
-        legSpeed = 255;
-      }
-    } else if (ctl->r2()) {  // Move Forward
-        webControl = false;
-        Serial.printf("Moving forward: Speed %d\n", speedFwd);
-        ledcWrite(0, speedFwd);  // Forward motion
-        ledcWrite(1, 0);
-        ledcWrite(2, speedFwd);  // Forward motion
-        ledcWrite(3, 0);
-        legSpeed = speedFwd;
-    } else if (ctl->l2()) {  // Move Backward
-        int speedBwd = map(ctl->brake(), 0, 1023, 140, 255);
-        webControl = false;
-        ledcWrite(0, 0);
-        ledcWrite(1, speedBwd);  // Reverse motion
-        ledcWrite(2, 0);
-        ledcWrite(3, speedBwd);  // Reverse motion
-        legSpeed = speedBwd;
-    } else if (ctl->throttle() == 0 && !webControl) {  // Stop Motor
-        ledcWrite(0, 0);
-        ledcWrite(1, 0);
-        ledcWrite(2, 0);
-        ledcWrite(3, 0);
-        legSpeed = 0;
+  } else if (ctl->l1()) {  // Rotate left
+    webControl = false;
+    if (speedFwd > 120) {
+      ledcWrite(0, constrain(speedFwd, 120, 180));
+      ledcWrite(1, 0);
+      ledcWrite(2, 255);
+      ledcWrite(3, 0);
+      legSpeed = speedFwd;
+    } else if (speedBwd > 120) {
+      ledcWrite(0, 0);
+      ledcWrite(1, 255);
+      ledcWrite(2, 0);
+      ledcWrite(3, constrain(speedBwd, 120, 180));
+      legSpeed = speedBwd;
+    } else {
+      ledcWrite(0, 0);
+      ledcWrite(1, 255);
+      ledcWrite(2, 255);
+      ledcWrite(3, 0);
+      legSpeed = 255;
     }
+  } else if (ctl->r2()) {  // Move Forward
+    webControl = false;
+    Serial.printf("Moving forward: Speed %d\n", speedFwd);
+    ledcWrite(0, speedFwd);  // Forward motion
+    ledcWrite(1, 0);
+    ledcWrite(2, speedFwd);  // Forward motion
+    ledcWrite(3, 0);
+    legSpeed = speedFwd;
+  } else if (ctl->l2()) {  // Move Backward
+    int speedBwd = map(ctl->brake(), 0, 1023, 140, 255);
+    webControl = false;
+    ledcWrite(0, 0);
+    ledcWrite(1, speedBwd);  // Reverse motion
+    ledcWrite(2, 0);
+    ledcWrite(3, speedBwd);  // Reverse motion
+    legSpeed = speedBwd;
+  } else if (ctl->throttle() == 0 && !webControl) {  // Stop Motor
+    ledcWrite(0, 0);
+    ledcWrite(1, 0);
+    ledcWrite(2, 0);
+    ledcWrite(3, 0);
+    legSpeed = 0;
+  }
 
-    if (ctl->dpad() == DPAD_LEFT) { // Turning head to the left
-      headSpeed = 255;
-      ledcWrite(4, 255);
-      ledcWrite(5, 0);
-    } else if (ctl->dpad() == DPAD_RIGHT) { // Turning head to the right
-      headSpeed = 255;
-      ledcWrite(4, 0);
-      ledcWrite(5, 255);
-    } else if (ctl->dpad() == 0) {
-      headSpeed = 0;
-      ledcWrite(4, 0);
-      ledcWrite(5, 0);
-    }
+  if (ctl->dpad() == DPAD_LEFT) {  // Turning head to the left
+    headSpeed = 255;
+    ledcWrite(4, 255);
+    ledcWrite(5, 0);
+  } else if (ctl->dpad() == DPAD_RIGHT) {  // Turning head to the right
+    headSpeed = 255;
+    ledcWrite(4, 0);
+    ledcWrite(5, 255);
+  } else if (ctl->dpad() == 0) {
+    headSpeed = 0;
+    ledcWrite(4, 0);
+    ledcWrite(5, 0);
+  }
 
-    if (ctl->x()) {
-        // Some gamepads like DS3, DS4, DualSense, Switch, Xbox One S, Stadia support rumble.
-        // It is possible to set it by calling:
-        // Some controllers have two motors: "strong motor", "weak motor".
-        // It is possible to control them independently.
-        ctl->playDualRumble(0 /* delayedStartMs */, 250 /* durationMs */, 0x80 /* weakMagnitude */,
-                            0x40 /* strongMagnitude */);
-    }
+  if (ctl->x()) {
+    ctl->playDualRumble(0 /* delayedStartMs */, 250 /* durationMs */, 0x80 /* weakMagnitude */,
+                        0x40 /* strongMagnitude */);
+  }
 
-    if (ctl->y()) {
-      Serial.println("Playing sound 1...");
-      myDFPlayer.playFolder(1, 1);
-    }
+  if (ctl->y()) {
+    myDFPlayer.playFolder(1, 1);
+  }
 
-    if (ctl->b()) {
-      Serial.println("Playing sound 2");
-      myDFPlayer.playFolder(folderNum, fileNum);
-    }
-
-    // Another way to query controller data is by getting the buttons() function.
-    // See how the different "dump*" functions dump the Controller info.
-    // dumpGamepad(ctl);
-    battery = ctl->battery() / 2.55;
+  if (ctl->b()) {
+    myDFPlayer.playFolder(folderNum, fileNum);
+  }
+  // dumpGamepad(ctl);
+  battery = ctl->battery() / 2.55;
 }
 
 void processControllers() {
-    for (auto myController : myControllers) {
-        if (myController && myController->isConnected() && myController->hasData()) {
-            if (myController->isGamepad()) {
-                processGamepad(myController);
-            } else {
-                Serial.println("Unsupported controller");
-            }
-        }
+  for (auto myController : myControllers) {
+    if (myController && myController->isConnected() && myController->hasData()) {
+      if (myController->isGamepad()) {
+        processGamepad(myController);
+      } else {
+        Serial.println("Unsupported controller");
+      }
     }
+  }
 }
 
-void printDetail(uint8_t type, int value){
+void printDetail(uint8_t type, int value) {
   switch (type) {
     case TimeOut:
       Serial.println(F("Time Out!"));
@@ -1164,329 +1166,314 @@ void printDetail(uint8_t type, int value){
     default:
       break;
   }
-
 }
 
 void playRandomFile() {
-    if (!muted) {
-      unsigned long currentMillis = millis();
+  if (!muted) {
+    unsigned long currentMillis = millis();
 
-      if (currentMillis - lastPlayTime >= playInterval) {
-          int randomFile;
-          
-          if (random(2) == 0) {  
-              randomFile = random(2, 10);  // Choose a file from 2-9
-          } else {  
-              randomFile = random(20, 29); // Choose a file from 20-28
-          }
+    if (currentMillis - lastPlayTime >= playInterval) {
+      int randomFile;
 
-          int randomVolume = random(10, 20);  // Random volume between 10-25
-          myDFPlayer.volume(randomVolume);
-          myDFPlayer.playFolder(1, randomFile);
-
-          Serial.printf("Playing file %d from folder 1 at volume %d\n", randomFile, randomVolume);
-
-          lastPlayTime = currentMillis;
-          playInterval = random(20000, 60001);  // Random interval for next play
+      if (random(2) == 0) {
+        randomFile = random(2, 10);  // Choose a file from 2-9
+      } else {
+        randomFile = random(20, 29);  // Choose a file from 20-28
       }
+
+      int randomVolume = random(10, 20);  // Random volume between 10-25
+      myDFPlayer.volume(randomVolume);
+      myDFPlayer.playFolder(1, randomFile);
+
+      Serial.printf("Playing file %d from folder 1 at volume %d\n", randomFile, randomVolume);
+
+      lastPlayTime = currentMillis;
+      playInterval = random(20000, 60001);  // Random interval for next play
     }
+  }
 }
 
 void setup() {
-    Serial.begin(115200);
+  Serial.begin(115200);
 
-    // Init LEDS
-    pinMode(WIFI_PIN, OUTPUT);
+  // Init LEDS
+  pinMode(WIFI_PIN, OUTPUT);
+  digitalWrite(WIFI_PIN, LOW);
+  pinMode(BT_PIN, OUTPUT);
+  digitalWrite(BT_PIN, LOW);
+  pinMode(SETTINGS_PIN, OUTPUT);
+  digitalWrite(SETTINGS_PIN, LOW);
+
+  Serial.printf("Firmware: %s\n", BP32.firmwareVersion());
+
+  const uint8_t *addr = BP32.localBdAddress();
+  if (addr) {
+    char macStr[18];  // Buffer for formatted MAC address (17 chars + null terminator)
+    sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
+    macAddress = String(macStr);
+    Serial.println("BD Addr: " + macAddress);
+  } else {
+    Serial.println("Error: Failed to get Bluetooth address.");
+  }
+
+  // DFPlayer Mini initialization
+  DFSerial.begin(9600, SERIAL_8N1, 16, 17);
+  Serial.println("Initializing DFPlayer...");
+  if (!myDFPlayer.begin(DFSerial)) {
+    Serial.println("DFPlayer Mini not detected!");
+    return;  // Exit setup to avoid further issues
+  }
+
+  Serial.println("DFPlayer Mini Ready.");
+  DFConnection = true;
+  myDFPlayer.outputDevice(DFPLAYER_DEVICE_SD);
+  volume = 20;
+  myDFPlayer.volume(volume);
+  myDFPlayer.playFolder(2, 1);
+
+  // WiFi connection with timeout
+  WiFi.begin(ssid, password);
+  unsigned long wifiStart = millis();
+  while (WiFi.status() != WL_CONNECTED && (millis() - wifiStart) < 15000) {
+    digitalWrite(WIFI_PIN, HIGH);
+    delay(500);
     digitalWrite(WIFI_PIN, LOW);
-    pinMode(BT_PIN, OUTPUT);
-    digitalWrite(BT_PIN, LOW);
-    pinMode(SETTINGS_PIN, OUTPUT);
-    digitalWrite(SETTINGS_PIN, LOW);
+    delay(500);
+    Serial.println("Connecting to WiFi...");
+  }
 
-    Serial.printf("Firmware: %s\n", BP32.firmwareVersion());
+  // WiFi status check
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("Connected to WiFi!");
+    Serial.print("IP Address: ");
+    Serial.println(WiFi.localIP());
+    digitalWrite(WIFI_PIN, HIGH);
 
-    const uint8_t* addr = BP32.localBdAddress();
-    if (addr) {
-        char macStr[18]; // Buffer for formatted MAC address (17 chars + null terminator)
-        sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", 
-                addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
+    sendTelegramMessage("ESP32 Server is online!\nIP Address: " + WiFi.localIP().toString());
+  } else {
+    Serial.println("WiFi connection failed. Continuing without WiFi...");
+    digitalWrite(WIFI_PIN, LOW);
+    myDFPlayer.playFolder(2, 2);
+  }
 
-        macAddress = String(macStr);
-        Serial.println("BD Addr: " + macAddress);
+
+
+  // Start Web Server
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send_P(200, "text/html", index_html);
+  });
+
+  server.on("/ip", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", WiFi.localIP().toString().c_str());
+  });
+
+  server.on("/battery", HTTP_GET, [](AsyncWebServerRequest *request) {
+    String batteryStr;
+
+    if (BTConnection) {
+      batteryStr = String(battery) + "%";
     } else {
-        Serial.println("Error: Failed to get Bluetooth address.");
+      batteryStr = "Controller not connected";
     }
 
-    // DFPlayer Mini initialization
-    DFSerial.begin(9600, SERIAL_8N1, 16, 17);
-    Serial.println("Initializing DFPlayer...");
+    request->send(200, "text/plain", batteryStr.c_str());
+  });
 
-    if (!myDFPlayer.begin(DFSerial)) {  
-        Serial.println("DFPlayer Mini not detected!");
-        return;  // Exit setup to avoid further issues
-    }
+  server.on("/mac", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", macAddress.c_str());
+  });
 
-    Serial.println("DFPlayer Mini Ready.");
-    DFConnection = true;
-    myDFPlayer.outputDevice(DFPLAYER_DEVICE_SD);
-    volume = 20;
-    myDFPlayer.volume(volume);
-    myDFPlayer.playFolder(3, 1);
+  server.on("/btcon", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", BTConnection ? "Connected" : "Not Connected");
+  });
 
-    // WiFi connection with timeout
-    WiFi.begin(ssid, password);
-    unsigned long wifiStart = millis();
-    while (WiFi.status() != WL_CONNECTED && (millis() - wifiStart) < 15000) {
-        digitalWrite(WIFI_PIN, HIGH);
-        delay(500);
-        digitalWrite(WIFI_PIN, LOW);
-        delay(500);
-        Serial.println("Connecting to WiFi...");
-    }
+  server.on("/dfcon", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", DFConnection ? "Connected" : "Not Connected");
+  });
 
-    // WiFi status check
-    if (WiFi.status() == WL_CONNECTED) {
-        Serial.println("Connected to WiFi!");
-        Serial.print("IP Address: ");
-        Serial.println(WiFi.localIP());
-        digitalWrite(WIFI_PIN, HIGH);
+  server.on("/model", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", controllerModel.c_str());
+  });
 
-        sendTelegramMessage("ESP32 Server is online!\nIP Address: " + WiFi.localIP().toString());
+  server.on("/legs", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", String(legSpeed));
+  });
+
+  server.on("/head", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", String(headSpeed));
+  });
+
+  server.on("/changeSound", HTTP_GET, [](AsyncWebServerRequest *request) {
+
+    // Get the folder and file from the request parameters
+    if (request->hasParam("folder") && request->hasParam("file")) {
+      folderNum = request->getParam("folder")->value().toInt();
+      fileNum = request->getParam("file")->value().toInt();
+      request->send(204);
     } else {
-        Serial.println("WiFi connection failed. Continuing without WiFi...");
-        digitalWrite(WIFI_PIN, LOW);
-        myDFPlayer.playFolder(3, 2);
+      request->send(400, "text/plain", "Missing folder or file parameter");
     }
+  });
 
-    
+  server.on("/playSound", HTTP_GET, [](AsyncWebServerRequest *request) {
+    myDFPlayer.playFolder(folderNum, fileNum);
+    request->send(204);
+  });
 
-    // Start Web Server
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send_P(200, "text/html", index_html);
-    });
+  server.on("/stopSound", HTTP_GET, [](AsyncWebServerRequest *request) {
+    myDFPlayer.stop();
+    request->send(204);
+  });
 
-    server.on("/ip", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(200, "text/plain", WiFi.localIP().toString().c_str());
-    });
+  server.on("/muteSound", HTTP_GET, [](AsyncWebServerRequest *request) {
+    muted = true;
+    request->send(204);
+  });
 
-    server.on("/battery", HTTP_GET, [](AsyncWebServerRequest *request) {
-        String batteryStr;
+  server.on("/unmuteSound", HTTP_GET, [](AsyncWebServerRequest *request) {
+    muted = false;
+    request->send(204);
+  });
 
-        if (BTConnection) {
-            batteryStr = String(battery) + "%";
-        } else {
-            batteryStr = "Controller not connected";
-        }
+  server.on("/setVolume", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (request->hasParam("level")) {
+      volume = request->getParam("level")->value().toInt();
+      volume = constrain(volume, 0, 30);
+      myDFPlayer.volume(volume);
+    }
+    request->send(204);
+  });
 
-        request->send(200, "text/plain", batteryStr.c_str());
-    });
+  server.on("/turnHead", HTTP_GET, [](AsyncWebServerRequest *request) {
+    String dir = request->getParam("dir")->value();
+    int speed = 255;
 
-    server.on("/mac", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(200, "text/plain", macAddress.c_str());
-    });
+    if (dir == "left") {
+      webControl = true;
+      headSpeed = speed;
+      ledcWrite(4, speed);
+      ledcWrite(5, 0);
+    } else if (dir == "right") {
+      webControl = true;
+      headSpeed = speed;
+      ledcWrite(4, 0);
+      ledcWrite(5, speed);
+    } else if (dir == "stop") {
+      webControl = true;
+      headSpeed = 0;
+      ledcWrite(4, 0);
+      ledcWrite(5, 0);
+    }
+    request->send(204);
+  });
 
-    server.on("/btcon", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(200, "text/plain", BTConnection ? "Connected" : "Not Connected");
-    });
+  server.on("/move", HTTP_GET, [](AsyncWebServerRequest *request) {
+    String dir = request->getParam("dir")->value();
 
-    server.on("/dfcon", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(200, "text/plain", DFConnection ? "Connected" : "Not Connected");
-    });
+    if (dir == "forward") {
+      webControl = true;
+      int speedFwd = 255;
+      legSpeed = speedFwd;
 
-    server.on("/model", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(200, "text/plain", controllerModel.c_str());
-    });
+      // Set motor speeds for forward movement
+      ledcWrite(0, speedFwd);  // Forward motion
+      ledcWrite(1, 0);
+      ledcWrite(2, speedFwd);  // Forward motion
+      ledcWrite(3, 0);
 
-    server.on("/legs", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(200, "text/plain", String(legSpeed));
-    });
+      request->send(204);
+    } else if (dir == "backward") {
+      webControl = true;
+      int speedBwd = 255;
+      legSpeed = speedBwd;
 
-    server.on("/head", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(200, "text/plain", String(headSpeed));
-    });
+      ledcWrite(0, 0);
+      ledcWrite(1, speedBwd);  // Reverse motion
+      ledcWrite(2, 0);
+      ledcWrite(3, speedBwd);  // Reverse motion
 
-    server.on("/changeSound", HTTP_GET, [](AsyncWebServerRequest *request) {
-        String folder;
-        String file;
+      request->send(204);
+    } else if (dir == "stop") {
+      webControl = true;
+      Serial.printf("Stopped moving\n");
+      ledcWrite(0, 0);
+      ledcWrite(1, 0);
+      ledcWrite(2, 0);
+      ledcWrite(3, 0);
+      legSpeed = 0;
 
-        // Get the folder and file from the request parameters
-        if (request->hasParam("folder") && request->hasParam("file")) {
-            folder = request->getParam("folder")->value();
-            file = request->getParam("file")->value();
+      request->send(204);
+    } else {
+      request->send(400, "text/plain", "Invalid direction");
+    }
+  });
 
-            folderNum = folder.toInt();
-            fileNum = file.toInt();
+  server.on("/turn", HTTP_GET, [](AsyncWebServerRequest *request) {
+    String dir = request->getParam("dir")->value();
+    int speed = 255;
 
-            request->send(204);
-        } else {
-            // If the parameters are not found, return an error
-            request->send(400, "text/plain", "Missing folder or file parameter");
-        }
-    });
+    if (dir == "left") {
+      legSpeed = speed;
+      webControl = true;
+      ledcWrite(0, 0);      // LEFT FWD
+      ledcWrite(1, speed);  // LEFT BWD
+      ledcWrite(2, speed);  // RIGHT FWD
+      ledcWrite(3, 0);      // RIGHT BWD
+    } else if (dir == "right") {
+      legSpeed = speed;
+      webControl = true;
+      ledcWrite(0, speed);  // LEFT FWD
+      ledcWrite(1, 0);      // LEFT BWD
+      ledcWrite(2, 0);      // RIGHT FWD
+      ledcWrite(3, speed);  // RIGHT BWD
+    } else if (dir == "stop") {
+      legSpeed = 0;
+      webControl = true;
+      ledcWrite(0, 0);
+      ledcWrite(1, 0);
+      ledcWrite(2, 0);
+      ledcWrite(3, 0);
+    }
+    request->send(204);
+  });
 
-    server.on("/playSound", HTTP_GET, [](AsyncWebServerRequest *request) {
-        myDFPlayer.playFolder(folderNum, fileNum);
-        request->send(204);
-    });
+  server.begin();
 
-    server.on("/stopSound", HTTP_GET, [](AsyncWebServerRequest *request) {
-        myDFPlayer.stop();
-        request->send(204);
-    });
+  ledcSetup(0, 1000, 8);
+  ledcSetup(1, 1000, 8);
+  ledcSetup(2, 1000, 8);
+  ledcSetup(3, 1000, 8);
+  ledcSetup(4, 1000, 8);
+  ledcSetup(5, 1000, 8);
 
-    server.on("/muteSound", HTTP_GET, [](AsyncWebServerRequest *request) {
-        muted = true;
-        request->send(204);
-    });
+  ledcAttachPin(R_MOTOR_PWM1, 0);
+  ledcAttachPin(R_MOTOR_PWM2, 1);
+  ledcAttachPin(L_MOTOR_PWM1, 2);
+  ledcAttachPin(L_MOTOR_PWM2, 3);
+  ledcAttachPin(HEAD_MOTOR_PWM1, 4);
+  ledcAttachPin(HEAD_MOTOR_PWM2, 5);
 
-    server.on("/unmuteSound", HTTP_GET, [](AsyncWebServerRequest *request) {
-        muted = false;
-        request->send(204);
-    });
+  ledcWrite(0, 0);
+  ledcWrite(1, 0);
+  ledcWrite(2, 0);
+  ledcWrite(3, 0);
+  ledcWrite(4, 0);
+  ledcWrite(5, 0);
 
-    server.on("/setVolume", HTTP_GET, [](AsyncWebServerRequest *request) {
-        if (request->hasParam("level")) {
-            volume = request->getParam("level")->value().toInt();
-            volume = constrain(volume, 0, 30);
-            myDFPlayer.volume(volume);
-        }
-        request->send(204);
-    });
-
-    server.on("/turnHead", HTTP_GET, [](AsyncWebServerRequest *request) {
-        String dir = request->getParam("dir")->value();
-        Serial.println("Turning head on direction: " + dir);
-        int speed = 255;
-
-        if (dir == "left") {
-          webControl = true;
-          headSpeed = speed;
-          ledcWrite(4, speed);
-          ledcWrite(5, 0);
-        } else if (dir == "right") {
-          webControl = true;
-          headSpeed = speed;
-          ledcWrite(4, 0);
-          ledcWrite(5, speed);
-        } else if (dir == "stop") {
-          webControl = true;
-          headSpeed = 0;
-          ledcWrite(4, 0);
-          ledcWrite(5, 0);
-        }
-        request->send(204);
-    });
-
-    server.on("/move", HTTP_GET, [](AsyncWebServerRequest *request) {
-        String dir = request->getParam("dir")->value();
-        
-        if (dir == "forward") {
-          webControl = true;
-            int speedFwd = 255;
-            legSpeed = speedFwd;
-            Serial.printf("Moving forward: Speed %d\n", speedFwd);
-
-            // Set motor speeds for forward movement
-            ledcWrite(0, speedFwd);  // Forward motion
-            ledcWrite(1, 0);
-            ledcWrite(2, speedFwd);  // Forward motion
-            ledcWrite(3, 0);
-
-            request->send(204);
-        } else if (dir == "backward") {
-            webControl = true;
-            int speedBwd = 255;
-            legSpeed = speedBwd;
-            Serial.printf("Moving backward: Speed %d\n", speedBwd);
-
-            ledcWrite(0, 0);
-            ledcWrite(1, speedBwd);  // Reverse motion
-            ledcWrite(2, 0);
-            ledcWrite(3, speedBwd);  // Reverse motion
-
-            request->send(204);
-        } else if (dir == "stop") {
-            webControl = true;  
-            Serial.printf("Stopped moving\n");
-            ledcWrite(0, 0);
-            ledcWrite(1, 0);
-            ledcWrite(2, 0);
-            ledcWrite(3, 0);
-            legSpeed = 0;
-
-            request->send(204);
-        } else {
-            request->send(400, "text/plain", "Invalid direction");
-        }
-    });
-
-    server.on("/turn", HTTP_GET, [](AsyncWebServerRequest *request) {
-        String dir = request->getParam("dir")->value();
-        int speed = 255;
-
-        if (dir == "left") {
-        legSpeed = speed;
-        webControl = true;
-        ledcWrite(0, 0); // LEFT FWD
-        ledcWrite(1, speed); // LEFT BWD
-        ledcWrite(2, speed); // RIGHT FWD
-        ledcWrite(3, 0); // RIGHT BWD
-      } else if (dir == "right") {
-        legSpeed = speed;
-        webControl = true;
-        ledcWrite(0, speed); // LEFT FWD
-        ledcWrite(1, 0); // LEFT BWD
-        ledcWrite(2, 0); // RIGHT FWD
-        ledcWrite(3, speed); // RIGHT BWD
-      } else if (dir == "stop") {
-        legSpeed = 0;
-        webControl = true;
-        ledcWrite(0, 0);
-        ledcWrite(1, 0);
-        ledcWrite(2, 0);
-        ledcWrite(3, 0);
-      }
-        request->send(204);
-    });
-
-    server.begin();
-
-    ledcSetup(0, 1000, 8);
-    ledcSetup(1, 1000, 8);
-    ledcSetup(2, 1000, 8);
-    ledcSetup(3, 1000, 8);
-    ledcSetup(4, 1000, 8);
-    ledcSetup(5, 1000, 8);
-
-    ledcAttachPin(R_MOTOR_PWM1, 0);
-    ledcAttachPin(R_MOTOR_PWM2, 1);
-    ledcAttachPin(L_MOTOR_PWM1, 2);
-    ledcAttachPin(L_MOTOR_PWM2, 3);
-    ledcAttachPin(HEAD_MOTOR_PWM1, 4);
-    ledcAttachPin(HEAD_MOTOR_PWM2, 5);
-
-    ledcWrite(0, 0);
-    ledcWrite(1, 0);
-    ledcWrite(2, 0);
-    ledcWrite(3, 0);
-    ledcWrite(4, 0);
-    ledcWrite(5, 0);
-
-    BP32.setup(&onConnectedController, &onDisconnectedController);
-    BP32.forgetBluetoothKeys();
-    BP32.enableVirtualDevice(false);
+  BP32.setup(&onConnectedController, &onDisconnectedController);
+  BP32.forgetBluetoothKeys();
+  BP32.enableVirtualDevice(false);
 }
 
 void loop() {
-    bool dataUpdated = BP32.update();
-    if (dataUpdated)
-        processControllers();
+  if (BP32.update())
+    processControllers();
 
-    delay(150);
+  delay(150);
 
-    if (myDFPlayer.available()) {
-      printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
-    }
+  if (myDFPlayer.available()) {
+    printDetail(myDFPlayer.readType(), myDFPlayer.read());  //Print the detail message from DFPlayer to handle different errors and states.
+  }
 
-    playRandomFile();
+  playRandomFile();
 }

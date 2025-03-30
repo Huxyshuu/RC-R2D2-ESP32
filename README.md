@@ -1,3 +1,6 @@
+![image](https://github.com/user-attachments/assets/44f356e6-565c-4080-a1bd-478bbaeda65a)![image](https://github.com/user-attachments/assets/414eba5b-396e-453b-82cc-f4254495e722)<img src="https://i.imgur.com/ZxnPFW1.png" align="right"
+     alt="KokkiKawaii logo" width="327" height="463">
+
 # Remote-Controlled R2D2
 🚀 R2D2 Replica – Bluetooth-Controlled Droid with Web UI
 This project brings R2D2 to life with custom-designed, 3D-printed parts and Bluetooth control! 🛠️🔵 The droid is fully operable via a PS4 controller, allowing for smooth, responsive movement.
@@ -19,7 +22,31 @@ Built from scratch, this project blends electronics, CAD modeling, and programmi
     * [6.1 Things to improve](#things-to-improve)
 
 
-![Project poster](https://i.imgur.com/ZxnPFW1.png)
+<table>
+  <tr>
+      <th>Adafruit HUZZAH32 – ESP32 Feather Board</th>
+      <th>MP2307 - Buck Regulator</th>
+      <th>DFR0299 - DFPlayer</th>
+      <th>MX1508 - DC Motor Driver</th>
+  </tr>
+  <tr>
+      <td><img src="![image](https://github.com/user-attachments/assets/4e48b540-8f3d-4719-b4ac-f9649fca4f53)
+" alt="ESP32" width="150"></td>
+      <td><img src="![image](https://github.com/user-attachments/assets/9a6c3e01-303b-4425-8626-ae69cf11f04d)
+" alt="MP2307" width="150"></td>
+      <td><img src="![image](https://github.com/user-attachments/assets/be559c20-1e0d-4722-b635-ec31338833f6)
+" alt="DFR0299" width="150"></td>
+     <td><img src="![image](https://github.com/user-attachments/assets/62f7a3be-7384-4f6d-a3e5-80c071138fc0)
+" alt="MX1508" width="150"></td>
+  </tr>
+  <tr>
+      <td><strong>$199.99</strong></td>
+      <td><strong>$149.99</strong></td>
+      <td><strong>$179.99</strong></td>
+  </tr>
+</table>
+
+
 
 ## Components
 Most of the components are listed in the table with price estimates (shipping not included), however smaller components such as wires, resistors, bolts as well as 3D printed PLA parts are not listed.

@@ -1,10 +1,25 @@
 # Remote-Controlled R2D2
-A mechatronics project
+🚀 R2D2 Replica – Bluetooth-Controlled Droid with Web UI
+This project brings R2D2 to life with custom-designed, 3D-printed parts and Bluetooth control! 🛠️🔵 The droid is fully operable via a PS4 controller, allowing for smooth, responsive movement.
+
+But that’s not all—a web-based interface lets you:
+🎵 Choose iconic R2D2 sound effects
+🔊 Adjust volume levels for a personalized experience
+📡 Monitor real-time status updates as the droid moves and connects
+
+Built from scratch, this project blends electronics, CAD modeling, and programming into a fully interactive experience.
+
+# Table of Contents
+1. [Components](#components)
+2. [Electronics](#electronics)
+3. [CAD Models & 3D Prints](#cad-models--3d-prints)
+4. [Web Interface](#web-interface)
+5. [Code](#code)
+6. [Future](#future)
+    * [6.1 Things to improve](#things-to-improve)
+
 
 ![Project poster](https://i.imgur.com/ZxnPFW1.png)
-
-## Project Plan
-The goal is to create an R2D2 model from scratch with custom designed parts, 3D printing all the parts to resemble the real thing (down-scaled). The droid will be controlled with a PS4 controller over bluetooth, allowing for seamless movement. There will also be a web UI that allows for picking sound effects, tweaking the volume of all the sounds that R2D2 makes as well as seeing the live status of the droid updating when it moves and connects. 
 
 ## Components
 Most of the components are listed in the table with price estimates (shipping not included), however smaller components such as wires, resistors, bolts as well as 3D printed PLA parts are not listed.

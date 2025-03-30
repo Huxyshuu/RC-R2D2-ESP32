@@ -1,24 +1,32 @@
 <img src="https://i.imgur.com/ZxnPFW1.png" align="right"
-     alt="R2D2 Poster" width="327" height="463">
+     alt="R2D2 Poster" width="350">
 
 # Remote-Controlled R2D2
 🚀 R2D2 Replica – Bluetooth-Controlled Droid with Web UI
-This project brings R2D2 to life with custom-designed, 3D-printed parts and Bluetooth control! 🛠️🔵 The droid is fully operable via a PS4 controller, allowing for smooth, responsive movement.
+This project brings R2D2 to life with **custom-designed, 3D-printed parts** and **Bluetooth control!** 
+The droid is fully operable via a **PS4 controller**, allowing for smooth, responsive movement.
 
 But that’s not all—a web-based interface lets you:
-🎵 Choose iconic R2D2 sound effects
-🔊 Adjust volume levels for a personalized experience
-📡 Monitor real-time status updates as the droid moves and connects
 
-Built from scratch, this project blends electronics, CAD modeling, and programming into a fully interactive experience.
+🎵 **Choose iconic R2D2 sound effects**
+
+🔊 **Adjust volume levels** for a personalized experience
+
+📡 **Monitor real-time status updates** as the droid moves and connects
+
+Built from scratch, this project blends **electronics, CAD modeling, and programming** into a fully interactive experience.
 
 # Table of Contents
-1. [Components](#components)
-2. [Electronics](#electronics)
-3. [CAD Models & 3D Prints](#cad-models--3d-prints)
-4. [Web Interface](#web-interface)
-5. [Code](#code)
-6. [Future](#future)
+1. [Demonstration Video](#demonstration-video)
+2. [Components](#components)
+3. [Electronics](#electronics)
+4. [CAD Models & 3D Prints](#cad-models--3d-prints)
+5. [Web Interface](#web-interface)
+6. [Code](#code)
+7. [Future](#future)
+
+## Demonstration Video
+I'll add it soon, promise!
 
 ## Components
 Most of the components are listed in the table with price estimates (shipping not included), however smaller components such as wires, resistors, bolts as well as 3D printed PLA parts are not listed.

@@ -17,7 +17,7 @@ But that’s not all—a web-based interface lets you:
 Built from scratch, this project blends **electronics, CAD modeling, and programming** into a fully interactive experience.
 
 # Table of Contents
-1. [Demonstration Video](#demonstration-video)
+1. [Demonstration Video & Images](#demonstration-video--images)
 2. [Components](#components)
 3. [Electronics](#electronics)
 4. [CAD Models & 3D Prints](#cad-models--3d-prints)
@@ -25,9 +25,8 @@ Built from scratch, this project blends **electronics, CAD modeling, and program
 6. [Code](#code)
 7. [Future](#future)
 
-## Demonstration Video
-<img src="https://i.imgur.com/CYhFhS5.png"
-     alt="R2D2 Poster" height="300">
+## Video & Images
+I'll add them here soon, promise
 
 ## Components
 Most of the components are listed in the table with price estimates (shipping not included), however smaller components such as wires, resistors, bolts as well as 3D printed PLA parts are not listed.
@@ -107,12 +106,18 @@ Custom 3D models to fit all the necessary electronics and components inside. I i
 
 The branding will be removed from the hatch in the part files posted in case someone is interested in using them.
 
+<img src="https://i.imgur.com/CYhFhS5.png"
+     alt="R2D2 Poster" height="300"><img src="https://i.imgur.com/OfLIeBo.png"
+     alt="R2D2 Poster" height="300">
+     
 <img src="https://i.imgur.com/xLYjFZ6.png"
-     alt="front view" height="300"><img src="https://i.imgur.com/VVzoz1w.png"
-     alt="side view" height="300"><img src="https://i.imgur.com/poVChxk.png"
-     alt="back view" height="300"><img src="https://i.imgur.com/grrUFfI.png"
-     alt="up view" height="300"><img src="https://i.imgur.com/DROu2Uq.png"
-     alt="exploded view" height="300">
+     alt="front view" height="250"><img src="https://i.imgur.com/VVzoz1w.png"
+     alt="side view" height="250"><img src="https://i.imgur.com/poVChxk.png"
+     alt="back view" height="250"><img src="https://i.imgur.com/grrUFfI.png"
+     alt="up view" height="250"><img src="https://i.imgur.com/DROu2Uq.png"
+     alt="exploded view" height="250">
+
+
 
 <img src="https://wiki.aalto.fi/download/attachments/357139402/WebIllustration.png?version=1&modificationDate=1741213402976&api=v2" align="right"
      alt="WEB UI" width="420">

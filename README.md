@@ -106,7 +106,12 @@ Custom 3D models to fit all the necessary electronics and components inside. I i
 
 The branding will be removed from the hatch in the part files posted in case someone is interested in using them.
 
-**!!Model images here!!**
+<img src="https://i.imgur.com/xLYjFZ6.png"
+     alt="front view" height="300"><img src="https://i.imgur.com/VVzoz1w.png"
+     alt="side view" height="300"><img src="https://i.imgur.com/poVChxk.png"
+     alt="back view" height="300"><img src="https://i.imgur.com/grrUFfI.png"
+     alt="up view" height="300"><img src="https://i.imgur.com/DROu2Uq.png"
+     alt="exploded view" height="300">
 
 <img src="https://wiki.aalto.fi/download/attachments/357139402/WebIllustration.png?version=1&modificationDate=1741213402976&api=v2" align="right"
      alt="WEB UI" width="420">

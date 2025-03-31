@@ -26,7 +26,8 @@ Built from scratch, this project blends **electronics, CAD modeling, and program
 7. [Future](#future)
 
 ## Demonstration Video
-I'll add it soon, promise!
+<img src="https://i.imgur.com/CYhFhS5.png"
+     alt="R2D2 Poster" height="300">
 
 ## Components
 Most of the components are listed in the table with price estimates (shipping not included), however smaller components such as wires, resistors, bolts as well as 3D printed PLA parts are not listed.

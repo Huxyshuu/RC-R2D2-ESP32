@@ -119,7 +119,7 @@ I soldered all of the components to the protoboard as seen in the pictures. Most
 ## CAD Models & 3D Prints
 Custom 3D models to fit all the necessary electronics and components inside. I included a small hatch in the back to have easy access to electronics in case there's any need to update the code or a problem occurs. The whole build consists of 13 printed parts and 17 CAD files to model everything.
 
-The branding will be removed from the hatch in the part files posted in case someone is interested in using them.
+The branding will be removed from the hatch in the .STL files in case someone is interested in printing this ^^
 
 <img src="https://i.imgur.com/CYhFhS5.png"
      alt="R2D2 Poster" height="300"><img src="https://i.imgur.com/OfLIeBo.png"

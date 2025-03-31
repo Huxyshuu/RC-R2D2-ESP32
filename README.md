@@ -117,7 +117,7 @@ I soldered all of the components to the protoboard as seen in the pictures. Most
 <img src="https://wiki.aalto.fi/download/attachments/357139402/Electronics.png?version=2&modificationDate=1741602204848&api=v2" alt="Wiring" width="300"><img src="https://wiki.aalto.fi/download/attachments/357139402/Electronics_p2.jpeg?version=1&modificationDate=1741648177560&api=v2" alt="Wiring" width="300"><img src="https://wiki.aalto.fi/download/attachments/357139402/Electronics_p1.png?version=1&modificationDate=1741648177779&api=v2" alt="Wiring" width="300">
 
 ## CAD Models & 3D Prints
-Custom 3D models to fit all the necessary electronics and components inside. I included a small hatch in the back to have easy access to electronics in case there's any need to update the code or a problem occurs. The whole build consists of 13 printed parts and 17 CAD files to model everything.
+Custom 3D models to fit all the necessary electronics and components inside. I included a small hatch in the back to have easy access to electronics in case there's any need to update the code or a problem occurs. The whole build consists of 17 printed parts.
 
 The branding will be removed from the hatch in the .STL files in case someone is interested in printing this ^^
 

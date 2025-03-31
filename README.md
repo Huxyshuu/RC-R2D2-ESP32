@@ -17,16 +17,31 @@ But that’s not all—a web-based interface lets you:
 Built from scratch, this project blends **electronics, CAD modeling, and programming** into a fully interactive experience.
 
 # Table of Contents
-1. [Demonstration Video & Images](#demonstration-video--images)
-2. [Components](#components)
-3. [Electronics](#electronics)
-4. [CAD Models & 3D Prints](#cad-models--3d-prints)
-5. [Web Interface](#web-interface)
-6. [Code](#code)
-7. [Future](#future)
+1. [Video & Images](#video--images)
+2. [Repository Organization](#repository-organization)
+3. [Components](#components)
+4. [Electronics](#electronics)
+5. [CAD Models & 3D Prints](#cad-models--3d-prints)
+6. [Web Interface](#web-interface)
+7. [Code](#code)
+8. [Future](#future)
 
 ## Video & Images
 I'll add them here soon, promise
+
+## Repository organization
+The file structure will be as follows:
+```
+📦 RC-R2D2-ESP32
+ ├─ 📄 README.md
+ ├─ 📄 RoboCode.Ino
+ ├─ 📄 webUI.html
+ ├─ 📂 Prints (contains all the printable files in .STL format)
+ │  ├─ 📄 torso.stl
+ │  ├─ 📄 head.stl
+ │  └─ ...
+...
+```
 
 ## Components
 Most of the components are listed in the table with price estimates (shipping not included), however smaller components such as wires, resistors, bolts as well as 3D printed PLA parts are not listed.
@@ -102,9 +117,9 @@ I soldered all of the components to the protoboard as seen in the pictures. Most
 <img src="https://wiki.aalto.fi/download/attachments/357139402/Electronics.png?version=2&modificationDate=1741602204848&api=v2" alt="Wiring" width="300"><img src="https://wiki.aalto.fi/download/attachments/357139402/Electronics_p2.jpeg?version=1&modificationDate=1741648177560&api=v2" alt="Wiring" width="300"><img src="https://wiki.aalto.fi/download/attachments/357139402/Electronics_p1.png?version=1&modificationDate=1741648177779&api=v2" alt="Wiring" width="300">
 
 ## CAD Models & 3D Prints
-Custom 3D models to fit all the necessary electronics and components inside. I included a small hatch in the back to have easy access to electronics in case there's any need to update the code or a problem occurs. The whole build consists of 12 separate CAD files (not including mirrored parts), and 17 printed parts.
+Custom 3D models to fit all the necessary electronics and components inside. I included a small hatch in the back to have easy access to electronics in case there's any need to update the code or a problem occurs. The whole build consists of 13 printed parts and 17 CAD files to model everything.
 
-The branding will be removed from the hatch in the part files posted in case someone is interested in using them.
+The branding will be removed from the hatch in the .STL files in case someone is interested in printing this ^^
 
 <img src="https://i.imgur.com/CYhFhS5.png"
      alt="R2D2 Poster" height="300"><img src="https://i.imgur.com/OfLIeBo.png"

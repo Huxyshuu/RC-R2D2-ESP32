@@ -25,6 +25,7 @@ Built from scratch, this project blends **electronics, CAD modeling, and program
 6. [Web Interface](#web-interface)
 7. [Code](#code)
 8. [Future](#future)
+9. [Thank You](#thank-you) ❤️
 
 ## Video & Images
 Video and images taken from the Mechatronics Circus 2025 in Aalto University
@@ -179,3 +180,15 @@ While most of the project came out as intended and worked smoothly, there are a 
 - The head turns well with the current setup but creates a lot of noise from the edge of the head hitting the bearings. Removing the bearings from the torso and lifting the head up from the center beam in a rigid way might improve this.
 - The middle leg is also attached to the torso in a rather silly way as well as having the caster wheel which makes the turning and climbing small bumps hard.
 
+### Thank you
+As with most "great" things, they are rarely done alone, so thank you to everyone who helped me and kept me company with this project.
+
+Merihelinä Larimo
+
+Paavo Miettinen
+
+Szilard Papp
+
+Johannes Malinen
+
+❤️

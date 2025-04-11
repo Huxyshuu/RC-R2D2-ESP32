@@ -29,7 +29,7 @@ Built from scratch, this project blends **electronics, CAD modeling, and program
 ## Video & Images
 Video and images taken from the Mechatronics Circus 2025 in Aalto University
 
-[![Watch the video](https://i.imgur.com/fmn2ZGJ.png)](https://i.imgur.com/pbBFR7t.mp4)
+https://github.com/user-attachments/assets/bc08d23b-32bb-44b7-bdc1-37275ab68ecd
 
 <img src="https://i.imgur.com/uAkL5tT.jpeg"
      alt="Image1 from the Mechatronics Circus 2025" height="300">

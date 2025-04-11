@@ -27,7 +27,15 @@ Built from scratch, this project blends **electronics, CAD modeling, and program
 8. [Future](#future)
 
 ## Video & Images
-I'll add them here soon, promise
+Video and images taken from the Mechatronics Circus 2025 in Aalto University
+
+[![Watch the video](https://i.imgur.com/fmn2ZGJ.png)](https://i.imgur.com/pbBFR7t.mp4)
+
+<img src="https://i.imgur.com/uAkL5tT.jpeg"
+     alt="Image1 from the Mechatronics Circus 2025" height="300">
+     <img src="https://i.imgur.com/vqMbkkU.jpeg"
+     alt="Image2 from the Mechatronics Circus 2025" height="300">
+     
 
 ## Repository organization
 The file structure will be as follows:

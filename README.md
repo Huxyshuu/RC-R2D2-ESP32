@@ -1,3 +1,6 @@
+### Update (27.09.2025)
+Fixed the images not displaying in GitHub
+
 <img src="https://i.imgur.com/ZxnPFW1.png" align="right"
      alt="R2D2 Poster" width="350">
 
@@ -63,10 +66,10 @@ Most of the components are listed in the table with price estimates (shipping no
      <th width="300">MX1508 - DC Motor Driver</th>
   </tr>
   <tr>
-      <td><img src="https://wiki.aalto.fi/download/thumbnails/357139402/esp32feather.jpg?version=1&modificationDate=1739307948398&api=v2" alt="ESP32" width="300"></td>
-      <td><img src="https://wiki.aalto.fi/download/thumbnails/357139402/DC%20Converter1.8A.jpg?version=1&modificationDate=1739308136385&api=v2" alt="MP2307" width="300"></td>
-      <td><img src="https://wiki.aalto.fi/download/thumbnails/357139402/DFR0299.jpg?version=1&modificationDate=1739308307415&api=v2" alt="DFR0299" width="300"></td>
-      <td><img src="https://wiki.aalto.fi/download/thumbnails/357139402/mx1508-dc-motor-driver-800x800.jpg?version=1&modificationDate=1739308954731&api=v2" alt="MX1508" width="300"></td>
+      <td><img src="https://imgur.com/hNiSiBh" alt="ESP32" width="300"></td>
+      <td><img src="https://imgur.com/E8Ccj8q" alt="MP2307" width="300"></td>
+      <td><img src="https://imgur.com/E8Ccj8q" width="300"></td>
+      <td><img src="https://imgur.com/E8Ccj8q" alt="MX1508" width="300"></td>
   </tr>
   <tr>
       <td><strong>30€</strong></td>
@@ -84,10 +87,10 @@ Most of the components are listed in the table with price estimates (shipping no
      <th width="300">9V Battery</th>
   </tr>
   <tr>
-      <td><img src="https://wiki.aalto.fi/download/thumbnails/357139402/ROB-12205.jpg?version=1&modificationDate=1739309082745&api=v2" alt="ROB-12205" width="300"></td>
-      <td><img src="https://wiki.aalto.fi/download/thumbnails/357139402/speaker.png?version=1&modificationDate=1741212618783&api=v2" alt="LSM-45F-8" width="300"></td>
-      <td><img src="https://wiki.aalto.fi/download/thumbnails/357139402/switch.png?version=1&modificationDate=1741212690717&api=v2" alt="Switch" width="300"></td>
-      <td><img src="https://wiki.aalto.fi/download/thumbnails/357139402/MFG_9V-MN1604.jpg?version=1&modificationDate=1739310014141&api=v2" alt="Battery" width="300"></td>
+      <td><img src="https://imgur.com/DNhwS6L" alt="ROB-12205" width="300"></td>
+      <td><img src="https://imgur.com/EdJCTX1" alt="LSM-45F-8" width="300"></td>
+      <td><img src="https://imgur.com/oHG3ylP" alt="Switch" width="300"></td>
+      <td><img src="https://imgur.com/3Xnewmg" alt="Battery" width="300"></td>
   </tr>
   <tr>
       <td><strong>3 X 10€</strong></td>
@@ -105,10 +108,10 @@ Most of the components are listed in the table with price estimates (shipping no
      <th width="300">Magnets (D: 10mm, h: 5mm)</th>
   </tr>
   <tr>
-      <td><img src="https://wiki.aalto.fi/download/thumbnails/357139402/sdcard.jpeg?version=1&modificationDate=1739828342183&api=v2" alt="ROB-12205" width="300"></td>
-      <td><img src="https://wiki.aalto.fi/download/thumbnails/357139402/ps4wireless.jpg?version=1&modificationDate=1739829117388&api=v2" alt="LSM-45F-8" width="300"></td>
-      <td><img src="https://wiki.aalto.fi/download/thumbnails/357139402/spraypaint.png?version=1&modificationDate=1742031885414&api=v2" alt="Switch" width="300"></td>
-      <td><img src="https://wiki.aalto.fi/download/thumbnails/357139402/magnet.png?version=1&modificationDate=1743078399876&api=v2" alt="Battery" width="300"></td>
+      <td><img src="https://imgur.com/EJeyLDY" alt="SD-Card" width="300"></td>
+      <td><img src="https://imgur.com/u2u0g9x" alt="PS4-controller" width="300"></td>
+      <td><img src="https://imgur.com/h35EqO6" alt="Blue spray can" width="300"></td>
+      <td><img src="https://imgur.com/rOUwNbN" alt="Magnets" width="300"></td>
   </tr>
   <tr>
       <td><strong>~8€</strong></td>
@@ -123,7 +126,7 @@ The total cost of the components and accessories from the table comes to **98€
 ## Electronics
 I soldered all of the components to the protoboard as seen in the pictures. Most of the wires and connections are below the board and can't be seen from the camera images, but the wiring diagram should accurately show all details.
 
-<img src="https://wiki.aalto.fi/download/attachments/357139402/Electronics.png?version=2&modificationDate=1741602204848&api=v2" alt="Wiring" width="300"><img src="https://wiki.aalto.fi/download/attachments/357139402/Electronics_p2.jpeg?version=1&modificationDate=1741648177560&api=v2" alt="Wiring" width="300"><img src="https://wiki.aalto.fi/download/attachments/357139402/Electronics_p1.png?version=1&modificationDate=1741648177779&api=v2" alt="Wiring" width="300">
+<img src="https://imgur.com/Qs9Jmv6" alt="Wiring" width="300"><img src="https://imgur.com/p6Wi7DN" alt="Wiring" width="300"><img src="https://imgur.com/ofP7zTy" alt="Wiring" width="300">
 
 ## CAD Models & 3D Prints
 Custom 3D models to fit all the necessary electronics and components inside. I included a small hatch in the back to have easy access to electronics in case there's any need to update the code or a problem occurs. The whole build consists of 17 printed parts.
@@ -143,7 +146,7 @@ The branding will be removed from the hatch in the .STL files in case someone is
 
 
 
-<img src="https://wiki.aalto.fi/download/attachments/357139402/WebIllustration.png?version=1&modificationDate=1741213402976&api=v2" align="right"
+<img src="https://imgur.com/XjvP6Dn" align="right"
      alt="WEB UI" width="420">
 ## Web Interface
 The illustration of the web interface that allows for more accessible control over the available settings as well as clunky movement commands. The ESP controller starts checking for a WiFi connection as soon as it is booted up. Pinging for 15 seconds while also blinking the WiFi LED. If the connection is found, it will send a telegram message containing the IP address to my telegram account. Accessing the IP address in any browser in the same network will show the web interface. If the pinging for a network fails, it will work just fine and continue without it, but there will be no access to the web interface and the additional settings provided there.

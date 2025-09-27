@@ -56,7 +56,7 @@ The file structure will be as follows:
 ```
 
 ## Components
-Most of the components are listed in the table with price estimates (shipping not included), however smaller components such as wires, resistors, bolts as well as 3D printed PLA parts are not listed.
+Most of the components are listed in the table with price estimates (shipping not included), however smaller components such as wires, resistors, bolts as well as 3D printed PLA parts are not listed. (**images are from online**)
 
 <table>
   <tr>

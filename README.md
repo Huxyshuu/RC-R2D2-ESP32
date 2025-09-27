@@ -1,5 +1,5 @@
-### Update (27.09.2025)
-Fixed the images not displaying in GitHub
+#### Update (27.09.2025)
+Fixed old image links for GitHub
 
 <img src="https://i.imgur.com/ZxnPFW1.png" align="right"
      alt="R2D2 Poster" width="350">
@@ -66,10 +66,10 @@ Most of the components are listed in the table with price estimates (shipping no
      <th width="300">MX1508 - DC Motor Driver</th>
   </tr>
   <tr>
-      <td><img src="https://imgur.com/hNiSiBh" alt="ESP32" width="300"></td>
-      <td><img src="https://imgur.com/E8Ccj8q" alt="MP2307" width="300"></td>
-      <td><img src="https://imgur.com/E8Ccj8q" width="300"></td>
-      <td><img src="https://imgur.com/E8Ccj8q" alt="MX1508" width="300"></td>
+      <td><img src="https://i.imgur.com/Npj6KwO.jpeg" alt="ESP32" width="300"></td>
+      <td><img src="https://i.imgur.com/E8Ccj8q.jpeg" alt="MP2307" width="300"></td>
+      <td><img src="https://i.imgur.com/YsXlxTt.jpeg" alt="DFR0299" width="300"></td>
+      <td><img src="https://i.imgur.com/kmfp4qb.jpeg" alt="MX1508" width="300"></td>
   </tr>
   <tr>
       <td><strong>30€</strong></td>
@@ -87,10 +87,10 @@ Most of the components are listed in the table with price estimates (shipping no
      <th width="300">9V Battery</th>
   </tr>
   <tr>
-      <td><img src="https://imgur.com/DNhwS6L" alt="ROB-12205" width="300"></td>
-      <td><img src="https://imgur.com/EdJCTX1" alt="LSM-45F-8" width="300"></td>
-      <td><img src="https://imgur.com/oHG3ylP" alt="Switch" width="300"></td>
-      <td><img src="https://imgur.com/3Xnewmg" alt="Battery" width="300"></td>
+      <td><img src="https://i.imgur.com/DNhwS6L.jpeg" alt="ROB-12205" width="300"></td>
+      <td><img src="https://i.imgur.com/EdJCTX1.png" alt="LSM-45F-8" width="300"></td>
+      <td><img src="https://i.imgur.com/oHG3ylP.png" alt="Switch" width="300"></td>
+      <td><img src="https://i.imgur.com/3Xnewmg.jpeg" alt="Battery" width="300"></td>
   </tr>
   <tr>
       <td><strong>3 X 10€</strong></td>
@@ -108,10 +108,10 @@ Most of the components are listed in the table with price estimates (shipping no
      <th width="300">Magnets (D: 10mm, h: 5mm)</th>
   </tr>
   <tr>
-      <td><img src="https://imgur.com/EJeyLDY" alt="SD-Card" width="300"></td>
-      <td><img src="https://imgur.com/u2u0g9x" alt="PS4-controller" width="300"></td>
-      <td><img src="https://imgur.com/h35EqO6" alt="Blue spray can" width="300"></td>
-      <td><img src="https://imgur.com/rOUwNbN" alt="Magnets" width="300"></td>
+      <td><img src="https://i.imgur.com/EJeyLDY.png" alt="SD-Card" width="300"></td>
+      <td><img src="https://i.imgur.com/u2u0g9x.jpeg" alt="PS4-controller" width="300"></td>
+      <td><img src="https://i.imgur.com/h35EqO6.png" alt="Blue spray can" width="300"></td>
+      <td><img src="https://i.imgur.com/rOUwNbN.png" alt="Magnets" width="300"></td>
   </tr>
   <tr>
       <td><strong>~8€</strong></td>
@@ -126,7 +126,7 @@ The total cost of the components and accessories from the table comes to **98€
 ## Electronics
 I soldered all of the components to the protoboard as seen in the pictures. Most of the wires and connections are below the board and can't be seen from the camera images, but the wiring diagram should accurately show all details.
 
-<img src="https://imgur.com/Qs9Jmv6" alt="Wiring" width="300"><img src="https://imgur.com/p6Wi7DN" alt="Wiring" width="300"><img src="https://imgur.com/ofP7zTy" alt="Wiring" width="300">
+<img src="https://i.imgur.com/Qs9Jmv6.png" alt="Wiring" width="300"><img src="https://i.imgur.com/p6Wi7DN.jpeg" alt="Wiring" width="300"><img src="https://i.imgur.com/ofP7zTy.png" alt="Wiring" width="300">
 
 ## CAD Models & 3D Prints
 Custom 3D models to fit all the necessary electronics and components inside. I included a small hatch in the back to have easy access to electronics in case there's any need to update the code or a problem occurs. The whole build consists of 17 printed parts.
@@ -146,7 +146,7 @@ The branding will be removed from the hatch in the .STL files in case someone is
 
 
 
-<img src="https://imgur.com/XjvP6Dn" align="right"
+<img src="https://i.imgur.com/XjvP6Dn.png" align="right"
      alt="WEB UI" width="420">
 ## Web Interface
 The illustration of the web interface that allows for more accessible control over the available settings as well as clunky movement commands. The ESP controller starts checking for a WiFi connection as soon as it is booted up. Pinging for 15 seconds while also blinking the WiFi LED. If the connection is found, it will send a telegram message containing the IP address to my telegram account. Accessing the IP address in any browser in the same network will show the web interface. If the pinging for a network fails, it will work just fine and continue without it, but there will be no access to the web interface and the additional settings provided there.
@@ -169,18 +169,11 @@ The full program contains over 1400 lines of code (mostly html). The program use
 
 [Project code in Github](https://github.com/Huxyshuu/RC-R2D2-ESP32/blob/main/RoboCode.ino)
 
-## Future
-### Things learnt
-I've learned a great deal in building this project and gained a lot of confidence in various things, from connecting and soldering electronics to designing and modelling compatible parts for 3D-printing.
-
-- I now know to be more careful with the tolerances when 3D-printing parts that are tightly connected
-- Spray painting is cool, but masking prints needs more care
-
-### Things to improve
+## Things to improvement
 While most of the project came out as intended and worked smoothly, there are a few areas that would benefit from further improvement.
 
 - The legs have a very flimsy attachment to the torso and are not rigid. Reworking the attachment would eliminate this problem.
-- The head turns well with the current setup but creates a lot of noise from the edge of the head hitting the bearings. Removing the bearings from the torso and lifting the head up from the center beam in a rigid way might improve this.
+- The head turns well with the current setup but creates a lot of noise from the edge of the head hitting the bearings. Removing the bearings from the torso and lifting the head up from the center beam in a rigid way should improve this.
 - The middle leg is also attached to the torso in a rather silly way as well as having the caster wheel which makes the turning and climbing small bumps hard.
 
 ### Thank you
@@ -194,4 +187,6 @@ Szilard Papp
 
 Johannes Malinen
 
-❤️
+& everyone involved
+
+^^ ❤️

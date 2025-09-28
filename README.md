@@ -19,6 +19,8 @@ But that’s not all—a web-based interface lets you:
 
 Built from scratch, this project blends **electronics, CAD modeling, and programming** into a fully interactive experience.
 
+[Link to Aalto's Wiki](https://wiki.aalto.fi/display/MEX/Remote-Controlled+R2D2)
+
 # Table of Contents
 1. [Video & Images](#video--images)
 2. [Repository Organization](#repository-organization)
